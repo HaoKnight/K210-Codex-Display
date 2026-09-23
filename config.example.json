@@ -1,0 +1,23 @@
+{
+  "source": "logs",
+  "codex_home": "~/.codex",
+  "codex_bin": "codex",
+  "limit_id": "codex",
+  "quota_poll_seconds": 300,
+  "quota_stale_seconds": 1800,
+  "activity_stale_seconds": 300,
+  "clock_sync_seconds": 7200,
+  "flip": false,
+  "serial_port": "",
+  "baudrate": 115200,
+  "http_port": 2100,
+  "utc_offset_minutes": 480,
+  "weather": {
+    "enabled": true,
+    "auto_location": true,
+    "city": "南京",
+    "latitude": 32.06,
+    "longitude": 118.79,
+    "poll_seconds": 1200
+  }
+}

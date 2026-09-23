@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>K210 Codex Display Hub</title>
+<style>
+:root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#080d12;color:#edf3f7;--panel:#101922;--panel2:#131f29;--line:#263846;--muted:#8ca1b1;--green:#35d99a;--blue:#3eb7ee;--amber:#ffb84f}*{box-sizing:border-box}body{max-width:1360px;margin:auto;padding:26px 28px 34px}button,input,select{font:inherit}header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}h1{font-size:25px;letter-spacing:-.7px;margin:0 0 5px}.eyebrow{color:var(--muted);font-size:11px;letter-spacing:1.4px}.head-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px}.pill{border:1px solid #315147;background:#10221e;padding:7px 11px;border-radius:20px;color:#6ee0b5;font-size:12px}.pill:before{content:"";display:inline-block;width:7px;height:7px;background:currentColor;border-radius:50%;margin-right:7px;box-shadow:0 0 10px currentColor}.dashboard{display:grid;grid-template-columns:380px minmax(0,1fr);gap:18px;align-items:stretch}.panel{border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:18px}.dashboard>.panel{height:100%}.screen-wrap{width:340px;max-width:100%;margin:0 auto;background:#0b131a;border:1px solid #22333f;border-radius:13px;padding:10px}canvas{width:100%;height:auto;display:block;image-rendering:auto;cursor:pointer;touch-action:manipulation}.screen-meta{display:flex;justify-content:space-between;gap:8px;margin-top:9px;color:var(--muted);font-size:11px;white-space:nowrap}.metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}.metric{background:var(--panel2);border:1px solid #263a48;border-radius:11px;padding:12px}.metric span{display:block;color:var(--muted);font-size:11px;margin-bottom:7px}.metric strong{font-size:19px;font-weight:650}.green{color:var(--green)}.amber{color:var(--amber)}.blue{color:var(--blue)}.muted{color:var(--muted)}.side{display:grid;gap:18px;align-content:start}.panel-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px}.panel-title h2{font-size:14px;margin:0}.ghost,.primary{border-radius:9px;padding:7px 13px;font-size:13px;line-height:1.25;cursor:pointer;transition:background .15s,border-color .15s,color .15s,filter .15s,transform .08s}.ghost{color:#d6e3eb;background:#172630;border:1px solid #354d5e}.ghost:hover:not(:disabled){background:#1e3140;border-color:#456172;color:#eef6fa}.ghost.on{background:#123047;border-color:#3d7ea3;color:#a8e2ff}.ghost.on:hover:not(:disabled){background:#16405c;border-color:#4b93bb;color:#bde9ff}.primary{color:#072017;background:var(--green);border:1px solid var(--green);font-weight:650;padding:8px 15px}.primary:hover:not(:disabled){filter:brightness(1.07)}.primary:disabled,.ghost:disabled{opacity:.55;cursor:wait}.ghost:active:not(:disabled),.primary:active:not(:disabled){transform:translateY(1px)}.ghost:focus-visible,.primary:focus-visible{outline:2px solid #48b9df;outline-offset:2px}.facts{display:grid;grid-template-columns:1fr 1fr;grid-auto-flow:column;grid-template-rows:repeat(3,auto);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}.fact{background:var(--panel2);padding:11px 12px;min-width:0}.fact.wide{grid-column:1/-1}.fact span{display:block;font-size:11px;color:var(--muted);margin-bottom:5px}.fact strong{font-size:13px;font-weight:520;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.error{margin-top:10px;border:1px solid #6b4825;background:#2a1d12;color:#ffc981;border-radius:9px;padding:10px 12px;font-size:12px;line-height:1.6;white-space:pre-line}.hidden{display:none}.settings{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{display:grid;gap:6px;min-width:0}.field.full{grid-column:1/-1}.field label,.toggle-label{font-size:11px;color:var(--muted)}input,select{width:100%;color:#ecf3f7;background:#0d161d;border:1px solid #304554;border-radius:8px;padding:9px 10px;outline:none}input:focus,select:focus{border-color:#48b9df;box-shadow:0 0 0 2px #16465a}.serial-line{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:7px}.weather-head{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;padding:2px 0 0}.switch{position:relative;width:42px;height:23px}.switch input{opacity:0;width:0;height:0}.slider{position:absolute;inset:0;background:#2b3b47;border-radius:20px;cursor:pointer}.slider:before{content:"";position:absolute;width:17px;height:17px;left:3px;top:3px;background:#b8c5ce;border-radius:50%;transition:.18s}.switch input:checked+.slider{background:#187957}.switch input:checked+.slider:before{transform:translateX(19px);background:white}.form-foot{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:4px}.save-status{font-size:12px;color:var(--muted)}.hint{grid-column:1/-1;margin:-3px 0 0;color:#7890a1;font-size:11px;line-height:1.5}.packet-view{margin-top:14px}.packet-title{color:var(--muted);font-size:12px;margin-bottom:8px}pre{margin:0;white-space:pre-wrap;word-break:break-all;max-height:300px;overflow:auto;color:#8bcac2;font-size:11px;line-height:1.45}.offline{display:none;background:#68411e;color:#ffe0a5;padding:9px 12px;border-radius:9px;margin-bottom:14px;font-size:13px}@media(max-width:900px){.dashboard{grid-template-columns:1fr}.dashboard>.panel{height:auto}.screen-wrap{width:340px}.side{grid-template-columns:1fr 1fr}.metrics{grid-template-columns:repeat(4,1fr)}}@media(max-width:760px){body{padding:18px 12px}.side{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}.settings{grid-template-columns:1fr}.field.full,.weather-head,.form-foot,.hint{grid-column:1}.program-panel{grid-column:1}.program-file-line{grid-template-columns:1fr 1fr}.program-file-line input:first-child{grid-column:1/-1}.head-actions #refresh{display:none}}
+.program-panel{display:grid;gap:9px}.program-panel .panel-title{margin-bottom:0}.program-file-line{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:7px}.program-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}.program-note{min-width:0;color:var(--muted);font-size:11px;line-height:1.45;overflow-wrap:anywhere}.program-progress{font-variant-numeric:tabular-nums}
+/* Compact desktop layout: both visible card borders end on the same row. */
+body{padding:20px 24px 24px}
+header{margin-bottom:14px}
+.panel{padding:14px}
+.side{grid-template-rows:auto minmax(0,1fr) auto;gap:14px;align-content:stretch}
+.panel-title{margin-bottom:10px}
+.fact{padding:9px 10px}
+.settings{gap:9px 12px}
+input,select{padding:8px 10px}
+.packet-view{margin-top:12px}
+pre#packet{max-height:160px}
+@media(max-width:900px){.side{grid-template-rows:auto;align-content:start}.program-panel{grid-column:1/-1}}
+@media(min-width:901px){
+  .dashboard{height:max(600px,calc(100vh - 108px))}
+  .dashboard>.panel{display:grid;grid-template-rows:auto auto minmax(0,1fr);min-height:0}
+  .packet-view{display:flex;min-height:0;flex-direction:column}
+  pre#packet{flex:1;min-height:80px;max-height:none}
+  .side{min-height:0}
+  .settings-panel{height:100%;min-height:0;overflow:auto}
+}
+/* Connection facts stay on one line; details have their own spacing. */
+.brand{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.brand h1{margin:0}
+.app-version{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 7px;white-space:nowrap}
+.fact{display:flex;align-items:center;gap:0;min-height:42px}
+.fact span{display:inline;flex:none;margin:0;font-size:12px;white-space:nowrap}
+.fact span::after{content:"："}
+.fact strong{display:inline;min-width:0;line-height:1.5}
+#sync-details{margin:12px 0 0;line-height:1.6}
+#sync-summary{cursor:pointer}
+@media(max-width:1150px){.facts{grid-template-columns:1fr;grid-template-rows:none;grid-auto-flow:row}}
+@media(max-width:760px){header{gap:12px;flex-wrap:wrap}}
+/* Give the weather setting a full, comfortably sized click target. */
+.weather-head{min-height:58px;padding:10px 14px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;gap:16px;cursor:pointer}
+.weather-head .toggle-label{font-size:15px;font-weight:550;color:#d6e3eb}
+.weather-head .switch{display:block;flex:0 0 56px;width:56px;height:32px}
+.weather-head .slider{cursor:pointer}
+.weather-head .slider:before{width:24px;height:24px;left:4px;top:4px}
+.weather-head .switch input:checked+.slider:before{transform:translateX(24px)}
+.weather-head .switch input:focus-visible+.slider{outline:2px solid var(--blue);outline-offset:3px}
+label[for="cfg-city"]{font-size:13px}
+/* Keep setting labels and controls in the same row, too. */
+.settings{grid-template-columns:minmax(0,1fr)}
+.settings .field,.program-panel>.field{display:grid;grid-template-columns:170px minmax(0,1fr);align-items:center;gap:12px}
+.settings .field label,.program-panel>.field>label{font-size:13px;white-space:nowrap;margin:0}
+.settings .field label::after,.program-panel>.field>label::after{content:"："}
+.settings .field.full,.settings .weather-head,.settings .form-foot{grid-column:1/-1}
+#source-hint{margin:0 0 0 182px}
+.serial-line,.program-file-line{min-width:0}
+@media(max-width:760px){
+  .settings .field,.program-panel>.field{grid-template-columns:145px minmax(0,1fr);gap:8px}
+  #source-hint{margin-left:153px}
+  .serial-line{grid-template-columns:minmax(0,1fr) auto;gap:6px}
+  .serial-line select{grid-column:1/-1}
+  .program-file-line{grid-template-columns:1fr 1fr}
+  .program-file-line input:first-child{grid-column:1/-1}
+}
+@media(min-width:901px){.dashboard{height:auto;min-height:max(600px,calc(100vh - 108px))}.side{grid-template-rows:auto auto auto;align-content:start}.settings-panel{height:auto;overflow:visible}}
+input:disabled{opacity:.6;cursor:not-allowed}
+/* Single-page engineering console. The LCD canvas and its renderer stay unchanged. */
+:root{background:#191c1f;color:#e6e8ea;--panel:#202428;--panel2:#252a2e;--line:#3a4045;--muted:#a2a9af;--amber:#efb544;--blue:#82b5d6;--green:#74c99b}
+body{max-width:1680px;padding:20px 24px;font-size:13px}
+header{min-height:48px;width:1390px;max-width:100%;margin:0 auto 16px;gap:16px}
+h1{font-size:23px;letter-spacing:-.4px}
+.app-version{border:0;padding:0;font-family:monospace}
+.dashboard{width:100%;max-width:1390px;margin-inline:auto;height:auto;min-height:0;grid-template-columns:minmax(340px,.732fr) repeat(2,minmax(0,1fr));gap:12px;align-items:stretch}
+.side{display:contents}
+.panel{padding:18px;border-radius:3px;min-width:0}
+.dashboard>.preview-panel{display:block;grid-column:1;grid-row:1 / 3;height:auto;padding:18px 12px}
+.settings-panel{grid-column:2;grid-row:1 / 3;height:auto;overflow:visible}
+.connection-panel{margin-top:20px;padding:0;border:0;background:none}
+.program-panel{grid-column:3;grid-row:1;display:flex;flex-direction:column;gap:16px}
+.panel-title{padding-bottom:14px;margin-bottom:18px;border-bottom:1px solid var(--line);gap:10px;flex-wrap:wrap}
+.panel-title h2{font-size:14px;font-weight:600}
+.metrics{margin-top:24px;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border-top:1px solid var(--line)}
+.metric{background:none;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:16px 8px}
+.metric strong{font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.metric{padding:16px 3px}
+.metric span{font-size:11px;white-space:nowrap}
+.pill{border:0;background:none;padding:0 4px;color:var(--green)}
+.pill:before{box-shadow:none}
+.ghost,.primary{border-radius:3px;min-height:34px}
+.ghost{background:#292e33;border-color:#51585f;color:#e4e7e9}
+.ghost:hover:not(:disabled){background:#363c42;border-color:#79818a;color:#fff}
+.ghost.on{background:#453a24;border-color:var(--amber);color:#f6ce80}
+.primary{background:var(--amber);border-color:var(--amber);color:#211b10}
+input,select{border-radius:3px;border-color:#51585f;background:#1c2024;color:#edf0f2;min-height:36px;font-size:13px}
+input:focus,select:focus{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber)}
+.settings{gap:16px}
+.settings .field,.program-panel>.field{grid-template-columns:1fr;gap:8px}
+.settings .field label::after,.program-panel>.field>label::after{content:none}
+#source-hint{margin:-8px 0 0;color:var(--muted);line-height:1.6}
+.serial-line{grid-template-columns:minmax(0,1fr) auto auto}
+.weather-head{border:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);border-radius:0;background:none;padding:14px 0;min-height:54px}
+.weather-head .toggle-label{font-size:13px;color:var(--muted)}
+.weather-head .switch{flex-basis:42px;width:42px;height:24px}
+.weather-head .slider:before{width:18px;height:18px;left:3px;top:3px}
+.weather-head .switch input:checked+.slider:before{transform:translateX(18px)}
+.switch input:checked+.slider{background:#a67824}
+.form-foot{align-items:stretch;flex-direction:column;gap:12px;padding-top:2px}
+.facts{display:flex;flex-direction:column;background:none;border:0;border-radius:0;gap:0}
+.fact{background:none;border-bottom:1px solid #30363b;padding:10px 0;justify-content:space-between;gap:12px;min-height:38px}
+.fact span{color:var(--muted);font-size:12px}
+.fact span::after{content:none}
+.fact strong{text-align:right;font-size:12px;overflow-wrap:anywhere;white-space:normal}
+.program-file-line{grid-template-columns:1fr 1fr}
+.program-file-line input:first-child{grid-column:1/-1}
+.program-actions{flex-direction:column;align-items:stretch;gap:14px}
+.program-panel .panel-title{margin-bottom:0}
+.error,.offline{border-radius:3px}
+.dashboard>.diagnostic-panel{grid-column:3;grid-row:2;display:block;height:auto;min-width:0}
+.packet-view{margin:0;display:block}
+.packet-title{cursor:pointer;margin:0;color:var(--muted);padding:4px 0}
+pre#packet{margin-top:12px;min-height:0;max-height:none;overflow:visible;white-space:pre-wrap;overflow-wrap:anywhere;color:#b8c8c0}
+@media(max-width:1050px){
+ header{width:878px}
+ .dashboard{max-width:878px;grid-template-columns:minmax(0,.732fr) minmax(0,1fr)}
+ .dashboard>.preview-panel{grid-column:1;grid-row:1 / 3}
+ .settings-panel{grid-column:2;grid-row:1 / 3}
+ .dashboard>.diagnostic-panel{grid-column:1;grid-row:3}
+ .program-panel{grid-column:2;grid-row:3}
+ .program-file-line{grid-template-columns:minmax(0,1fr) auto auto}
+ .program-file-line input:first-child{grid-column:auto}
+}
+@media(max-width:925px){
+ header{width:500px;flex-wrap:wrap}
+ body{padding:14px 12px}header{align-items:flex-start}.head-actions{justify-content:flex-start}
+ .dashboard{display:flex;flex-direction:column;width:500px;max-width:100%;margin-inline:auto}.panel{padding:14px}
+ .dashboard>.preview-panel{width:100%;max-width:100%;align-self:stretch}
+ .preview-panel{order:0}.settings-panel{order:1}.connection-panel{order:2}.program-panel{order:3}.diagnostic-panel{order:4}
+ .serial-line{grid-template-columns:minmax(0,1fr) auto auto}.serial-line select{grid-column:auto}
+ .program-file-line{grid-template-columns:1fr 1fr}.program-file-line input:first-child{grid-column:1/-1}
+}
+</style>
+<header><div class="brand"><h1>K210 Codex Display Hub</h1><span class="app-version" title="上位机版本">v1.0.0</span></div><div class="head-actions"><button type="button" class="ghost" id="refresh">刷新</button><button type="button" class="primary" id="sync">立即同步</button></div></header>
+<div class="offline" id="offline">上位机服务已断开，当前保留最后收到的画面。</div>
+<main class="dashboard">
+  <section class="panel preview-panel">
+    <div class="panel-title"><h2>屏幕预览</h2><span class="save-status">K210 · 实时画面</span></div>
+    <div class="screen-wrap"><canvas id="screen" width="320" height="240" aria-label="K210 屏幕实时预览"></canvas><div class="screen-meta"><span>320 × 240 · 实时预览</span><span id="time">--</span></div></div>
+    <div class="metrics">
+      <div class="metric"><span>5 小时剩余</span><strong class="green" id="q5">--</strong></div>
+      <div class="metric"><span>7D 剩余</span><strong class="blue" id="q7">--</strong></div>
+      <div class="metric"><span>Codex 状态</span><strong class="amber" id="task">--</strong></div>
+      <div class="metric"><span>天气</span><strong id="temperature">--</strong></div>
+    </div>
+    <section class="panel connection-panel">
+      <div class="panel-title"><h2>实时连接</h2><span id="health" class="save-status">每 2 秒刷新</span></div>
+      <div class="facts">
+        <div class="fact"><span>设备连接</span><strong id="serial">--</strong></div>
+        <div class="fact"><span>当前串口</span><strong id="port">--</strong></div>
+        <div class="fact"><span>活跃模型</span><strong id="model">--</strong></div>
+        <div class="fact"><span>时间同步</span><strong id="time-sync">--</strong></div>
+        <div class="fact"><span>天气同步</span><strong id="weather-at">--</strong></div>
+        <div class="fact"><span>额度同步</span><strong id="updated">--</strong></div>
+      </div>
+      <div id="errors" class="error hidden" role="status"></div>
+      <details id="sync-details" class="hint hidden"><summary id="sync-summary">最近同步结果</summary><div id="sync-results" role="status" style="white-space:pre-line;margin-top:6px"></div></details>
+    </section>
+  </section>
+  <div class="side">
+    <section class="panel settings-panel">
+      <div class="panel-title"><h2>连接与数据设置</h2><span class="save-status" id="save-status">载入配置中…</span></div>
+      <form id="settings" class="settings">
+        <div class="field full"><label for="cfg-source">数据来源</label><select id="cfg-source"><option value="logs">本地日志 · 快速稳定</option><option value="hybrid">混合 · 采用最新数据</option><option value="app-server">Codex 服务 · 定时查询</option><option value="demo">演示 · 模拟数据</option></select></div>
+        <div class="hint" id="source-hint">读取本机 Codex 日志，不主动请求服务器额度。</div>
+        <div class="field"><label for="cfg-baud">波特率</label><select id="cfg-baud"><option>115200</option><option>230400</option><option>460800</option><option>921600</option><option>57600</option></select></div>
+        <div class="field full"><label for="cfg-serial">K210 串口</label><div class="serial-line"><select id="cfg-serial"><option value="">仅网页预览</option></select><button type="button" class="ghost" id="reload-ports">扫描</button><button type="button" class="ghost" id="connect-port" disabled>连接</button></div></div>
+        <div class="field"><label for="cfg-offset">时区（固定 UTC 偏移）</label><select id="cfg-offset" required aria-describedby="timezone-hint"></select></div>
+        <div class="hint" id="timezone-hint">采用固定偏移；标注标准时间的地区不自动切换夏令时。</div>
+        <div class="field full"><label for="cfg-city">天气城市</label><input id="cfg-city" maxlength="16" autocomplete="off" placeholder="例如：天津"></div>
+        <label class="weather-head" for="cfg-weather"><span class="toggle-label">自动获取位置</span><span class="switch"><input id="cfg-weather" type="checkbox"><span class="slider"></span></span></label>
+        <div class="form-foot"><span class="save-status">保存后立即应用，无需重启</span><button class="primary" id="save" type="submit">保存并应用</button></div>
+      </form>
+    </section>
+    <section class="panel program-panel">
+      <div class="panel-title"><h2>K210 主程序更新</h2><span class="save-status program-progress" id="program-progress">等待设备</span></div>
+      <div class="field"><label for="program-path">主程序文件路径</label><div class="program-file-line"><input id="program-path" autocomplete="off" spellcheck="false" placeholder="请选择或输入 .py 文件路径"><button type="button" class="ghost" id="choose-program">选择文件</button><button type="button" class="ghost" id="default-program">默认文件</button><input id="program-file" type="file" accept=".py,text/x-python" hidden></div></div>
+      <div class="program-actions"><span class="program-note" id="program-status">连接设备后可更新 main.py</span><button type="button" class="primary" id="update-program" disabled>更新 main.py</button></div>
+    </section>
+  </div>
+  <section class="panel diagnostic-panel">
+    <div class="panel-title"><h2>通信数据</h2><span class="pill" id="mode">正在连接</span></div>
+    <details class="packet-view" open><summary class="packet-title" id="packet-title">发送给 K210 的原始数据（JSON）</summary><pre id="packet"></pre></details>
+  </section>
+</main>
+<script>
+const $=id=>document.getElementById(id),screen=$('screen'),preview=document.createElement('canvas'),ctx=preview.getContext('2d'),displayCtx=screen.getContext('2d');preview.width=320;preview.height=240;
+function timezoneLabel(minutes){const a=Math.abs(minutes);return `UTC${minutes<0?'-':'+'}${String(Math.floor(a/60)).padStart(2,'0')}:${String(a%60).padStart(2,'0')}${minutes===480?' · 北京时间':''}`}
+function setTimezone(minutes){const select=$('cfg-offset');if(!Array.from(select.options).some(o=>Number(o.value)===minutes))select.add(new Option(timezoneLabel(minutes)+' · 已保存',String(minutes)));select.value=String(minutes)}
+const commonTimezones=[[480,'中国 · 北京'],[540,'日本 / 韩国 · 东京 / 首尔'],[420,'泰国 · 曼谷'],[330,'印度 · 新德里'],[240,'阿联酋 · 迪拜'],[0,'英国 · 伦敦（标准时间）'],[60,'法国 / 德国 · 巴黎 / 柏林（标准时间）'],[-300,'美国 · 纽约（标准时间）'],[-480,'美国 · 洛杉矶（标准时间）'],[600,'澳大利亚 · 悉尼（标准时间）']];
+for(const [minutes,label] of commonTimezones)$('cfg-offset').add(new Option(`${timezoneLabel(minutes).split(' · ')[0]} · ${label}`,String(minutes)));
+setTimezone(480);
+const rgb=a=>`rgb(${a.join(',')})`;
+function fitScreen(){const ratio=Math.min(window.devicePixelRatio||1,2),width=Math.max(320,Math.round(screen.clientWidth*ratio)),height=Math.round(width*.75);if(screen.width!==width||screen.height!==height){screen.width=width;screen.height=height}}
+function paint(ops){ctx.clearRect(0,0,320,240);for(const op of ops){if(op[0]==='rect'){const[,x,y,w,h,c,fill]=op;ctx.fillStyle=ctx.strokeStyle=rgb(c);ctx.lineWidth=1;fill?ctx.fillRect(x,y,w,h):ctx.strokeRect(x+.5,y+.5,w-1,h-1)}else if(op[0]==='line'){const[,x,y,x2,y2,c,t]=op;ctx.strokeStyle=rgb(c);ctx.lineWidth=t;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x2,y2);ctx.stroke()}else{const[,x,y,r,c,fill]=op;ctx.fillStyle=ctx.strokeStyle=rgb(c);ctx.lineWidth=1;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);fill?ctx.fill():ctx.stroke()}}fitScreen();displayCtx.imageSmoothingEnabled=true;displayCtx.imageSmoothingQuality='high';displayCtx.clearRect(0,0,screen.width,screen.height);displayCtx.drawImage(preview,0,0,screen.width,screen.height)}
+const date=t=>t?new Date(t*1000).toLocaleString('zh-CN',{hour12:false}):'尚未取得';
+const percent=v=>v==null?'--':`${Math.round(v)}%`;
+const sourceName={logs:'本地日志',hybrid:'混合数据','app-server':'Codex 服务',demo:'演示数据',unavailable:'尚未取得'};
+const sourceHint={logs:'读取本机 Codex 日志，不主动请求服务器额度。',hybrid:'比较日志和 Codex 服务采样时间，采用更新的一份。','app-server':'通过已登录的 Codex 定时查询额度，任务状态仍来自日志。',demo:'显示模拟额度、状态和天气，适合测试界面。'};
+let frameVersion='',lastFrame=null,lastSyncAt=null;
+let pending=false,syncing=false,programUpdating=false,configDirty=false,flipped=false,activeSerialPort='',selectedProgramFile=null,defaultProgramPath='',programPathDirty=false;
+function syncConnectButton(){const selected=$('cfg-serial').value,button=$('connect-port'),disconnect=!!activeSerialPort&&(!selected||selected===activeSerialPort);button.textContent=disconnect?'断开':'连接';button.disabled=!selected&&!activeSerialPort}
+function setFlip(on){flipped=!!on;screen.style.transform=''}
+function applyProgramState(s){const update=s.program_update||{status:'idle',progress:0,message:'尚未更新'},button=$('update-program'),busy=programUpdating||['preparing','uploading','restarting'].includes(update.status),supported=s.serial.device_program_update===1,ready=!!(selectedProgramFile||$('program-path').value.trim());button.disabled=busy||!s.serial.connected||!supported||!ready;button.textContent=update.status==='restarting'?'等待重启…':busy&&update.progress?`更新中 ${update.progress}%`:busy?'正在准备…':'更新 main.py';$('program-progress').textContent=update.status==='failed'?'更新失败':update.status==='success'?'更新成功':update.status==='restarting'?'等待重启':busy?`${update.progress||0}%`:!s.serial.connected?'等待设备':!supported?'需要初始化':'可更新';$('program-status').textContent=['success','restarting','failed'].includes(update.status)?update.message:!s.serial.connected?'连接设备后可更新 main.py':!supported?'请先用 CanMV IDE 写入本次新版 main.py':update.message}
+function apply(s){const p=s.packet;if(!configDirty&&$('cfg-weather').checked)$('cfg-city').value=p.city;if(s.frame){lastFrame=s.frame;paint(s.frame);frameVersion=s.frame_version||'';}setFlip(p.flip);$('offline').style.display='none';$('mode').textContent=p.demo?'演示模式':`${sourceName[s.source_mode]||s.source_mode} · 实时`;$('time').textContent=new Date().toLocaleTimeString('zh-CN',{hour12:false});$('q5').textContent=percent(p.q5);$('q7').textContent=percent(p.q7);$('task').textContent=p.status==='RUNNING'&&s.activity?.running_count>1?`RUNNING × ${s.activity.running_count}`:p.status;$('task').className=p.status==='DONE'?'green':p.status==='RUNNING'?'blue':p.status==='IDLE'?'muted':'amber';$('temperature').textContent=p.temp==null?'--':`${Math.round(p.temp)} °C · ${p.condition}`;$('serial').textContent=s.serial.connected?'已收到设备确认':s.serial.open?'已打开，等待确认':s.serial.port==='未选择（仅预览）'?'仅网页预览':'等待连接';$('serial').className=s.serial.connected?'green':'amber';$('port').textContent=s.serial.port;activeSerialPort=s.serial.port==='未选择（仅预览）'?'':s.serial.port;syncConnectButton();$('model').textContent=p.model||'--';$('updated').textContent=date(s.quota_updated_at)+(p.stale?' · 已过期':'');$('weather-at').textContent=date(s.weather_updated_at);$('time-sync').textContent=s.serial.time_sync_at?date(s.serial.time_sync_at):s.serial.open?'等待 K210 确认':'尚未连接';$('packet').textContent=JSON.stringify(p,null,2);$('errors').textContent=s.errors.join('\n');$('errors').classList.toggle('hidden',!s.errors.length);applyProgramState(s);applySyncResults(s.sync)}
+function applySyncResults(sync){const el=$('sync-results'),details=$('sync-details');details.classList.toggle('hidden',!sync);if(!sync)return;$('sync-summary').textContent=sync.ok?'最近同步：已完成 · 点击查看':'最近同步：部分失败 · 点击查看';if(lastSyncAt!==sync.at){details.open=!sync.ok;lastSyncAt=sync.at;}const names={quota:'额度',weather:'天气',logs:'日志',clock:'校时'};el.textContent=Object.entries(sync.results).map(([key,r])=>`${r.status==='ok'?'✓':r.status==='failed'?'!':'—'} ${names[key]}：${r.message}`).join('\n')}
+async function update(){if(pending||syncing)return;pending=true;try{const r=await fetch('/api/state'+(frameVersion?'?frame_version='+encodeURIComponent(frameVersion):''),{signal:AbortSignal.timeout(5000)});if(!r.ok)throw Error(r.status);apply(await r.json());$('health').textContent='刚刚更新'}catch(e){$('offline').style.display='block';$('health').textContent='连接中断'}finally{pending=false}}
+let previewTouching=false;
+async function touchPreview(event){if(previewTouching)return;const rect=screen.getBoundingClientRect(),x=Math.max(0,Math.min(319,Math.floor((event.clientX-rect.left)*320/rect.width))),y=Math.max(0,Math.min(239,Math.floor((event.clientY-rect.top)*240/rect.height)));previewTouching=true;try{const r=await fetch('/api/device-touch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({x,y})}),result=await r.json();if(!r.ok||!result.ok)throw Error(result.error||'触摸操作失败');apply(result.state);$('health').textContent='K210 界面已同步'}catch(err){$('health').textContent='界面操作失败：'+err.message}finally{previewTouching=false}}
+async function syncNow(){const button=$('sync');if(button.disabled)return;button.disabled=true;syncing=true;$('health').textContent='正在同步…';try{if(!configDirty)await loadConfig();const r=await fetch('/api/sync',{method:'POST',signal:AbortSignal.timeout(90000)}),result=await r.json();if(!r.ok||!result.ok)throw Error(result.error||`HTTP ${r.status}`);apply(result.state);$('health').textContent=result.state.sync?.ok?'同步完成，各项结果见下方':'部分同步失败，详见各项结果'}catch(err){$('health').textContent='同步失败：'+err.message}finally{syncing=false;button.disabled=false}}
+function bytesToBase64(buffer){const bytes=new Uint8Array(buffer);let binary='';for(let i=0;i<bytes.length;i+=32768)binary+=String.fromCharCode(...bytes.subarray(i,i+32768));return btoa(binary)}
+async function loadProgramInfo(){try{const r=await fetch('/api/program-info');if(!r.ok)throw Error(r.status);const info=await r.json();defaultProgramPath=info.default_path||'';if(!programPathDirty&&!selectedProgramFile)$('program-path').value=defaultProgramPath}catch(e){$('program-status').textContent='默认主程序路径载入失败'}}
+function useDefaultProgram(){selectedProgramFile=null;programPathDirty=false;$('program-file').value='';$('program-path').value=defaultProgramPath;$('program-status').textContent='将使用项目中的默认 main.py';update()}
+async function updateProgram(){const button=$('update-program');if(button.disabled||programUpdating)return;programUpdating=true;button.disabled=true;button.textContent='正在准备…';$('program-progress').textContent='0%';$('program-status').textContent='正在检查并上传 main.py…';try{const payload={target:'auto'};if(selectedProgramFile){if(selectedProgramFile.size>512*1024)throw Error('所选文件不能超过 512 KB');payload.content=bytesToBase64(await selectedProgramFile.arrayBuffer());payload.filename=selectedProgramFile.name}else{const path=$('program-path').value.trim();if(!path)throw Error('请先选择或输入主程序文件路径');payload.path=path}const r=await fetch('/api/program-update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(1200000)}),result=await r.json();if(!r.ok||!result.ok)throw Error(result.error||'更新失败');const target=result.result.target,size=(result.result.size/1024).toFixed(1),warning=result.result.online_update_preserved?'':'；该文件不含在线更新模块，后续需用 CanMV IDE 恢复在线更新';$('program-status').textContent=`已写入 ${target} · ${size} KB，等待设备重启确认${warning}`;$('program-progress').textContent='等待重启';$('health').textContent='K210 主程序已写入，正在等待重启确认'}catch(err){$('program-status').textContent='更新失败：'+err.message;$('program-progress').textContent='失败';$('health').textContent='K210 程序更新失败'}finally{programUpdating=false;button.textContent='更新 main.py';setTimeout(update,1500)}}
+async function loadPorts(selected=$('cfg-serial').value){const button=$('reload-ports');button.disabled=true;try{const r=await fetch('/api/ports');if(!r.ok)throw Error(r.status);const ports=await r.json(),select=$('cfg-serial');select.innerHTML='';select.add(new Option('仅网页预览（不连接设备）',''));for(const p of ports)select.add(new Option(`${p.device} · ${p.description||'串口设备'}`,p.device));if(selected&&!ports.some(p=>p.device===selected))select.add(new Option(`${selected} · 当前配置`,selected));select.value=selected}catch(e){$('save-status').textContent='串口扫描失败'}finally{button.disabled=false;syncConnectButton()}}
+function sourceChanged(){$('source-hint').textContent=sourceHint[$('cfg-source').value]||''}
+function locationChanged(){$('cfg-city').disabled=$('cfg-weather').checked}
+$('cfg-weather').addEventListener('change',locationChanged);
+async function loadConfig(){try{const r=await fetch('/api/config');if(!r.ok)throw Error(r.status);const c=await r.json();activeSerialPort=c.serial_port;$('cfg-source').value=c.source;$('cfg-baud').value=String(c.baudrate);setTimezone(c.utc_offset_minutes);$('cfg-weather').checked=c.weather.auto_location;locationChanged();$('cfg-city').value=c.weather.city;await loadPorts(c.serial_port);sourceChanged();syncConnectButton();setFlip(c.flip);$('save-status').textContent='配置已载入';configDirty=false}catch(e){$('save-status').textContent='配置载入失败'}}
+$('settings').addEventListener('input',()=>{$('save-status').textContent='有未保存的更改';configDirty=true});$('cfg-source').addEventListener('change',sourceChanged);$('cfg-serial').addEventListener('change',syncConnectButton);$('reload-ports').onclick=()=>loadPorts();$('refresh').onclick=()=>window.location.reload();$('sync').onclick=syncNow;$('update-program').onclick=updateProgram;$('choose-program').onclick=()=>$('program-file').click();$('default-program').onclick=useDefaultProgram;$('program-file').onchange=()=>{const file=$('program-file').files[0];if(!file)return;if(!file.name.toLowerCase().endsWith('.py')){$('program-status').textContent='请选择 .py 主程序文件';$('program-file').value='';return}selectedProgramFile=file;programPathDirty=false;$('program-path').value=`已选择文件：${file.name}`;$('program-status').textContent=`已选择 ${file.name} · ${(file.size/1024).toFixed(1)} KB`;update()};$('program-path').addEventListener('input',()=>{selectedProgramFile=null;programPathDirty=true;$('program-file').value='';$('program-status').textContent='将从此路径读取主程序';update()});
+screen.addEventListener('click',touchPreview);
+$('connect-port').onclick=async()=>{const button=$('connect-port'),selected=$('cfg-serial').value,disconnect=!!activeSerialPort&&(!selected||selected===activeSerialPort),target=disconnect?'':selected;if(!target&&!disconnect){$('save-status').textContent='请先选择串口';return}button.disabled=true;$('save-status').textContent=disconnect?'正在断开…':'正在连接…';try{const r=await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({serial_port:target})}),result=await r.json();if(!r.ok)throw Error(result.error||'操作失败');activeSerialPort=target;if(!target)$('cfg-serial').value='';$('save-status').textContent=disconnect?'已断开串口':'已应用串口，正在等待设备';syncConnectButton();await update()}catch(err){$('save-status').textContent=err.message}finally{button.disabled=false;syncConnectButton()}};
+$('settings').onsubmit=async e=>{e.preventDefault();const button=$('save');button.disabled=true;$('save-status').textContent='正在保存…';const payload={source:$('cfg-source').value,serial_port:$('cfg-serial').value,baudrate:Number($('cfg-baud').value),utc_offset_minutes:Number($('cfg-offset').value),weather:{auto_location:$('cfg-weather').checked,...(!$('cfg-weather').checked?{city:$('cfg-city').value.trim()}:{})}};try{const r=await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const result=await r.json();if(!r.ok)throw Error(result.error||'保存失败');activeSerialPort=payload.serial_port;configDirty=false;syncConnectButton();$('save-status').textContent='设置已保存并生效';await update()}catch(err){$('save-status').textContent=err.message}finally{button.disabled=false}};
+let refreshTimer;
+function scheduleRefresh(){clearTimeout(refreshTimer);refreshTimer=setTimeout(async()=>{await update();scheduleRefresh()},document.hidden?10000:500)}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)update();scheduleRefresh()});
+window.addEventListener('resize',()=>{if(lastFrame)paint(lastFrame)});
+loadProgramInfo();loadConfig();update();scheduleRefresh();
+</script>
+</html>

@@ -1,0 +1,36 @@
+# macOS / editor-local files
+.DS_Store
+._*
+.vscode/
+.idea/
+
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Build and packaging output (keep build.py and *.spec)
+build/
+dist/
+*.egg-info/
+
+# Local configuration and credentials (keep example configs)
+config.local.json
+.env
+.env.*
+!.env.example
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+.coverage
+htmlcov/
+
+# Generated previews and local backup copies
+/output/
+backups/

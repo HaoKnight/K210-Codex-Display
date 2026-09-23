@@ -1,0 +1,2598 @@
+{
+  "12": {
+    " ": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -8,
+      "width": 3,
+      "height": 13
+    },
+    "%": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 11,
+      "height": 13
+    },
+    "-": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 4,
+      "height": 13
+    },
+    "/": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 3,
+      "height": 13
+    },
+    "0": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 13
+    },
+    "1": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 13
+    },
+    "2": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 13
+    },
+    "3": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 13
+    },
+    "4": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 13
+    },
+    "5": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 13
+    },
+    "6": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 13
+    },
+    "7": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 13
+    },
+    "8": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 13
+    },
+    "9": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 13
+    },
+    ":": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 4,
+      "height": 13
+    },
+    "?": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 13
+    },
+    "d": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 13
+    },
+    "h": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 13
+    },
+    "m": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 11,
+      "height": 13
+    },
+    "一": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "三": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "上": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "二": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "云": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "五": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "京": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "余": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "倒": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "六": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "剩": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "北": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "南": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "同": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "周": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "四": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "圳": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "型": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "多": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "天": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "安": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "小": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "州": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "广": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "庆": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "度": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "待": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "态": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "成": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "据": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "数": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "日": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "旧": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "时": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "晴": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "最": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "未": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "杭": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "模": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "步": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "武": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "汉": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "津": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "活": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "海": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "深": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "状": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "知": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "置": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "苏": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "西": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "计": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "跃": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "近": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "郑": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "都": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "重": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "阴": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "雨": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "雪": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "雷": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "雾": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "额": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 13
+    },
+    "i": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 3,
+      "height": 14
+    },
+    "t": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 4,
+      "height": 14
+    },
+    "g": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 14
+    },
+    "u": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 14
+    },
+    "y": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 14
+    },
+    "n": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 14
+    },
+    "K": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 9,
+      "height": 14
+    },
+    "_": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 14
+    },
+    "O": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 9,
+      "height": 14
+    },
+    "L": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 14
+    },
+    "e": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 14
+    },
+    "r": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 5,
+      "height": 14
+    },
+    "v": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 14
+    },
+    "T": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 14
+    },
+    ".": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 3,
+      "height": 14
+    },
+    "l": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 3,
+      "height": 14
+    },
+    "j": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 3,
+      "height": 14
+    },
+    "z": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 6,
+      "height": 14
+    },
+    "Z": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 14
+    },
+    "C": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 9,
+      "height": 14
+    },
+    "B": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 9,
+      "height": 14
+    },
+    "A": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 9,
+      "height": 14
+    },
+    "x": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 14
+    },
+    "Q": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 9,
+      "height": 14
+    },
+    "D": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 9,
+      "height": 14
+    },
+    "P": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 8,
+      "height": 14
+    },
+    "S": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 8,
+      "height": 14
+    },
+    "Y": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 8,
+      "height": 14
+    },
+    "b": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 14
+    },
+    "H": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 9,
+      "height": 14
+    },
+    "E": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 8,
+      "height": 14
+    },
+    "R": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 9,
+      "height": 14
+    },
+    "N": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 9,
+      "height": 14
+    },
+    "p": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 14
+    },
+    "o": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 14
+    },
+    "M": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 10,
+      "height": 14
+    },
+    "G": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 9,
+      "height": 14
+    },
+    "W": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 11,
+      "height": 14
+    },
+    "f": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 4,
+      "height": 14
+    },
+    "w": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 9,
+      "height": 14
+    },
+    "a": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 14
+    },
+    "F": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 14
+    },
+    "k": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 14
+    },
+    "U": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 9,
+      "height": 14
+    },
+    "q": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 14
+    },
+    "J": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 14
+    },
+    "V": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 8,
+      "height": 14
+    },
+    "X": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 8,
+      "height": 14
+    },
+    "s": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 14
+    },
+    "I": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 3,
+      "height": 14
+    },
+    "c": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 14
+    },
+    "更": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 14
+    },
+    "新": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 14
+    },
+    "秒": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 14
+    },
+    "前": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 12,
+      "height": 14
+    }
+  },
+  "18": {
+    " ": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -8,
+      "width": 5,
+      "height": 20
+    },
+    ":": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 6,
+      "height": 20
+    },
+    "?": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 11,
+      "height": 20
+    },
+    "C": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 13,
+      "height": 20
+    },
+    "d": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 11,
+      "height": 20
+    },
+    "e": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 10,
+      "height": 20
+    },
+    "o": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 11,
+      "height": 20
+    },
+    "x": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 10,
+      "height": 20
+    },
+    "态": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 18,
+      "height": 20
+    },
+    "状": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 18,
+      "height": 20
+    },
+    "屏": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 18,
+      "height": 20
+    },
+    "幕": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 18,
+      "height": 20
+    },
+    "翻": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 18,
+      "height": 20
+    },
+    "转": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 18,
+      "height": 20
+    },
+    "设": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 18,
+      "height": 20
+    },
+    "备": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 18,
+      "height": 20
+    },
+    "亮": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 18,
+      "height": 20
+    },
+    "度": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 18,
+      "height": 20
+    },
+    "：": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 18,
+      "height": 20
+    },
+    "D": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 13,
+      "height": 20
+    },
+    "7": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 10,
+      "height": 20
+    },
+    "余": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 18,
+      "height": 20
+    },
+    "5": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 10,
+      "height": 20
+    },
+    "剩": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 18,
+      "height": 20
+    },
+    "H": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 13,
+      "height": 20
+    },
+    "0": {
+      "font": "Arial Narrow.ttf",
+      "offset_y": -3,
+      "width": 8,
+      "height": 19
+    },
+    "1": {
+      "font": "Arial Narrow.ttf",
+      "offset_y": -3,
+      "width": 8,
+      "height": 19
+    },
+    "2": {
+      "font": "Arial Narrow.ttf",
+      "offset_y": -3,
+      "width": 8,
+      "height": 19
+    },
+    "3": {
+      "font": "Arial Narrow.ttf",
+      "offset_y": -3,
+      "width": 8,
+      "height": 19
+    },
+    "4": {
+      "font": "Arial Narrow.ttf",
+      "offset_y": -3,
+      "width": 8,
+      "height": 19
+    },
+    "6": {
+      "font": "Arial Narrow.ttf",
+      "offset_y": -3,
+      "width": 8,
+      "height": 19
+    },
+    "8": {
+      "font": "Arial Narrow.ttf",
+      "offset_y": -3,
+      "width": 8,
+      "height": 19
+    },
+    "9": {
+      "font": "Arial Narrow.ttf",
+      "offset_y": -3,
+      "width": 8,
+      "height": 19
+    },
+    "-": {
+      "font": "Arial Narrow.ttf",
+      "offset_y": -3,
+      "width": 5,
+      "height": 19
+    },
+    "周": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 18,
+      "height": 20
+    },
+    "一": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 18,
+      "height": 20
+    },
+    "二": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 18,
+      "height": 20
+    },
+    "三": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 18,
+      "height": 20
+    },
+    "四": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 18,
+      "height": 20
+    },
+    "五": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 18,
+      "height": 20
+    },
+    "六": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 18,
+      "height": 20
+    },
+    "日": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 18,
+      "height": 20
+    }
+  },
+  "24": {
+    " ": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -8,
+      "width": 7,
+      "height": 26
+    },
+    "%": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 21,
+      "height": 26
+    },
+    "-": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 8,
+      "height": 26
+    },
+    "0": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 13,
+      "height": 26
+    },
+    "1": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 13,
+      "height": 26
+    },
+    "2": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 13,
+      "height": 26
+    },
+    "3": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 13,
+      "height": 26
+    },
+    "4": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 13,
+      "height": 26
+    },
+    "5": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 13,
+      "height": 26
+    },
+    "6": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 13,
+      "height": 26
+    },
+    "7": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 13,
+      "height": 26
+    },
+    "8": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 13,
+      "height": 26
+    },
+    "9": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 13,
+      "height": 26
+    },
+    ":": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 8,
+      "height": 26
+    },
+    "?": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 15,
+      "height": 26
+    },
+    "A": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 17,
+      "height": 26
+    },
+    "C": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 17,
+      "height": 26
+    },
+    "D": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 17,
+      "height": 26
+    },
+    "E": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 16,
+      "height": 26
+    },
+    "F": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 15,
+      "height": 26
+    },
+    "G": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 19,
+      "height": 26
+    },
+    "H": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 17,
+      "height": 26
+    },
+    "I": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 7,
+      "height": 26
+    },
+    "K": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 17,
+      "height": 26
+    },
+    "L": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 15,
+      "height": 26
+    },
+    "N": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 17,
+      "height": 26
+    },
+    "O": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 19,
+      "height": 26
+    },
+    "R": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 17,
+      "height": 26
+    },
+    "T": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 15,
+      "height": 26
+    },
+    "U": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 17,
+      "height": 26
+    },
+    "W": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 23,
+      "height": 26
+    },
+    "余": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 24,
+      "height": 26
+    },
+    "剩": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 24,
+      "height": 26
+    },
+    "周": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 24,
+      "height": 26
+    },
+    "设": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 24,
+      "height": 26
+    },
+    "置": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 24,
+      "height": 26
+    },
+    "备": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 24,
+      "height": 27
+    },
+    "信": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 24,
+      "height": 27
+    },
+    "息": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 24,
+      "height": 27
+    },
+    "天": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 24,
+      "height": 27
+    },
+    "津": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 24,
+      "height": 27
+    },
+    "南": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 24,
+      "height": 27
+    },
+    "京": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 24,
+      "height": 27
+    },
+    "晴": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 24,
+      "height": 27
+    },
+    "多": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 24,
+      "height": 27
+    },
+    "云": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 24,
+      "height": 27
+    },
+    "阴": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 24,
+      "height": 27
+    },
+    "雨": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 24,
+      "height": 27
+    },
+    "雪": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 24,
+      "height": 27
+    },
+    "雷": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 24,
+      "height": 27
+    },
+    "雾": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 24,
+      "height": 27
+    },
+    "未": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 24,
+      "height": 27
+    },
+    "知": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 24,
+      "height": 27
+    },
+    "°": {
+      "font": "Arial Narrow.ttf",
+      "offset_y": -4,
+      "width": 8,
+      "height": 25
+    }
+  },
+  "36": {
+    " ": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -8,
+      "width": 10,
+      "height": 39
+    },
+    "-": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 12,
+      "height": 39
+    },
+    "0": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 20,
+      "height": 39
+    },
+    "1": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 20,
+      "height": 39
+    },
+    "2": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 20,
+      "height": 39
+    },
+    "3": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 20,
+      "height": 39
+    },
+    "4": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 20,
+      "height": 39
+    },
+    "5": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 20,
+      "height": 39
+    },
+    "6": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 20,
+      "height": 39
+    },
+    "7": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 20,
+      "height": 39
+    },
+    "8": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 20,
+      "height": 39
+    },
+    "9": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 20,
+      "height": 39
+    },
+    ":": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 12,
+      "height": 39
+    },
+    "?": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 22,
+      "height": 39
+    },
+    "C": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 26,
+      "height": 39
+    }
+  },
+  "15": {
+    "?": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "南": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "京": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "天": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "津": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "晴": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "多": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "云": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "阴": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "雨": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "雪": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "雷": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "雾": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "未": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "知": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "D": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 11,
+      "height": 17
+    },
+    "F": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 9,
+      "height": 17
+    },
+    "T": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 9,
+      "height": 17
+    },
+    "R": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 11,
+      "height": 17
+    },
+    "U": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 11,
+      "height": 17
+    },
+    "E": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 10,
+      "height": 17
+    },
+    "K": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 11,
+      "height": 17
+    },
+    "O": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 12,
+      "height": 17
+    },
+    "N": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 11,
+      "height": 17
+    },
+    "A": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 11,
+      "height": 17
+    },
+    "L": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 9,
+      "height": 17
+    },
+    "W": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 14,
+      "height": 17
+    },
+    "G": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 12,
+      "height": 17
+    },
+    "I": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 4,
+      "height": 17
+    },
+    "连": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "接": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "已": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "程": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "序": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "版": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "本": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "启": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "动": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "时": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "间": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "持": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "续": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "运": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "行": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "最": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "近": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "通": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "信": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "秒": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "前": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "收": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "到": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "待": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "同": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "步": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "0": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 8,
+      "height": 17
+    },
+    "1": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 8,
+      "height": 17
+    },
+    "2": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 8,
+      "height": 17
+    },
+    "3": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 8,
+      "height": 17
+    },
+    "4": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 8,
+      "height": 17
+    },
+    "5": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 8,
+      "height": 17
+    },
+    "6": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 8,
+      "height": 17
+    },
+    "7": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 8,
+      "height": 17
+    },
+    "8": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 8,
+      "height": 17
+    },
+    "9": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 8,
+      "height": 17
+    },
+    "v": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 8,
+      "height": 17
+    },
+    "d": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 8,
+      "height": 17
+    },
+    "h": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 8,
+      "height": 17
+    },
+    "m": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 13,
+      "height": 17
+    },
+    "s": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 8,
+      "height": 17
+    },
+    " ": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 4,
+      "height": 17
+    },
+    ":": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 4,
+      "height": 17
+    },
+    ".": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 4,
+      "height": 17
+    },
+    "-": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 5,
+      "height": 17
+    },
+    "显": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "示": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "额": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "度": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "屏": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "幕": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "翻": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "转": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "设": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "备": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "亮": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "C": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 12,
+      "height": 17
+    },
+    "o": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 9,
+      "height": 17
+    },
+    "e": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 9,
+      "height": 17
+    },
+    "x": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 9,
+      "height": 17
+    },
+    "周": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "一": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "二": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "三": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "四": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "五": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "六": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "日": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "%": {
+      "font": "Arial.ttf",
+      "offset_y": -1,
+      "width": 14,
+      "height": 17
+    }
+  },
+  "34": {
+    "0": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 19,
+      "height": 36
+    },
+    "1": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 19,
+      "height": 36
+    },
+    "2": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 19,
+      "height": 36
+    },
+    "3": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 19,
+      "height": 36
+    },
+    "4": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 19,
+      "height": 36
+    },
+    "5": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 19,
+      "height": 36
+    },
+    "6": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 19,
+      "height": 36
+    },
+    "7": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 19,
+      "height": 36
+    },
+    "8": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 19,
+      "height": 36
+    },
+    "9": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 19,
+      "height": 36
+    },
+    "-": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 11,
+      "height": 36
+    },
+    "?": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 21,
+      "height": 36
+    }
+  },
+  "20": {
+    "?": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 12,
+      "height": 22
+    },
+    "A": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 14,
+      "height": 22
+    },
+    "D": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 14,
+      "height": 22
+    },
+    "E": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 13,
+      "height": 22
+    },
+    "F": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 12,
+      "height": 22
+    },
+    "G": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 16,
+      "height": 22
+    },
+    "I": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 6,
+      "height": 22
+    },
+    "K": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 14,
+      "height": 22
+    },
+    "L": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 12,
+      "height": 22
+    },
+    "N": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 14,
+      "height": 22
+    },
+    "O": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 16,
+      "height": 22
+    },
+    "R": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 14,
+      "height": 22
+    },
+    "T": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 12,
+      "height": 22
+    },
+    "U": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 14,
+      "height": 22
+    },
+    "W": {
+      "font": "Arial Bold.ttf",
+      "offset_y": -1,
+      "width": 19,
+      "height": 22
+    }
+  },
+  "124": {
+    "0": {
+      "font": "DIN Condensed Bold.ttf",
+      "offset_y": 0,
+      "width": 46,
+      "height": 92
+    },
+    "1": {
+      "font": "DIN Condensed Bold.ttf",
+      "offset_y": 0,
+      "width": 46,
+      "height": 92
+    },
+    "2": {
+      "font": "DIN Condensed Bold.ttf",
+      "offset_y": 0,
+      "width": 46,
+      "height": 92
+    },
+    "3": {
+      "font": "DIN Condensed Bold.ttf",
+      "offset_y": 0,
+      "width": 46,
+      "height": 92
+    },
+    "4": {
+      "font": "DIN Condensed Bold.ttf",
+      "offset_y": 0,
+      "width": 46,
+      "height": 92
+    },
+    "5": {
+      "font": "DIN Condensed Bold.ttf",
+      "offset_y": 0,
+      "width": 46,
+      "height": 92
+    },
+    "6": {
+      "font": "DIN Condensed Bold.ttf",
+      "offset_y": 0,
+      "width": 46,
+      "height": 92
+    },
+    "7": {
+      "font": "DIN Condensed Bold.ttf",
+      "offset_y": 0,
+      "width": 46,
+      "height": 92
+    },
+    "8": {
+      "font": "DIN Condensed Bold.ttf",
+      "offset_y": 0,
+      "width": 46,
+      "height": 92
+    },
+    "9": {
+      "font": "DIN Condensed Bold.ttf",
+      "offset_y": 0,
+      "width": 46,
+      "height": 92
+    },
+    "?": {
+      "font": "DIN Condensed Bold.ttf",
+      "offset_y": 0,
+      "width": 46,
+      "height": 92
+    }
+  },
+  "22": {
+    "0": {
+      "font": "DIN Condensed Bold.ttf",
+      "offset_y": 0,
+      "width": 8,
+      "height": 17
+    },
+    "1": {
+      "font": "DIN Condensed Bold.ttf",
+      "offset_y": 0,
+      "width": 8,
+      "height": 17
+    },
+    "2": {
+      "font": "DIN Condensed Bold.ttf",
+      "offset_y": 0,
+      "width": 8,
+      "height": 17
+    },
+    "3": {
+      "font": "DIN Condensed Bold.ttf",
+      "offset_y": 0,
+      "width": 8,
+      "height": 17
+    },
+    "4": {
+      "font": "DIN Condensed Bold.ttf",
+      "offset_y": 0,
+      "width": 8,
+      "height": 17
+    },
+    "5": {
+      "font": "DIN Condensed Bold.ttf",
+      "offset_y": 0,
+      "width": 8,
+      "height": 17
+    },
+    "6": {
+      "font": "DIN Condensed Bold.ttf",
+      "offset_y": 0,
+      "width": 8,
+      "height": 17
+    },
+    "7": {
+      "font": "DIN Condensed Bold.ttf",
+      "offset_y": 0,
+      "width": 8,
+      "height": 17
+    },
+    "8": {
+      "font": "DIN Condensed Bold.ttf",
+      "offset_y": 0,
+      "width": 8,
+      "height": 17
+    },
+    "9": {
+      "font": "DIN Condensed Bold.ttf",
+      "offset_y": 0,
+      "width": 8,
+      "height": 17
+    },
+    "?": {
+      "font": "DIN Condensed Bold.ttf",
+      "offset_y": 0,
+      "width": 8,
+      "height": 17
+    }
+  },
+  "26": {
+    "0": {
+      "font": "Arial.ttf",
+      "offset_y": -5,
+      "width": 14,
+      "height": 25
+    },
+    "1": {
+      "font": "Arial.ttf",
+      "offset_y": -5,
+      "width": 14,
+      "height": 25
+    },
+    "2": {
+      "font": "Arial.ttf",
+      "offset_y": -5,
+      "width": 14,
+      "height": 25
+    },
+    "3": {
+      "font": "Arial.ttf",
+      "offset_y": -5,
+      "width": 14,
+      "height": 25
+    },
+    "4": {
+      "font": "Arial.ttf",
+      "offset_y": -5,
+      "width": 14,
+      "height": 25
+    },
+    "5": {
+      "font": "Arial.ttf",
+      "offset_y": -5,
+      "width": 14,
+      "height": 25
+    },
+    "6": {
+      "font": "Arial.ttf",
+      "offset_y": -5,
+      "width": 14,
+      "height": 25
+    },
+    "7": {
+      "font": "Arial.ttf",
+      "offset_y": -5,
+      "width": 14,
+      "height": 25
+    },
+    "8": {
+      "font": "Arial.ttf",
+      "offset_y": -5,
+      "width": 14,
+      "height": 25
+    },
+    "9": {
+      "font": "Arial.ttf",
+      "offset_y": -5,
+      "width": 14,
+      "height": 25
+    },
+    "-": {
+      "font": "Arial.ttf",
+      "offset_y": -5,
+      "width": 9,
+      "height": 25
+    },
+    "°": {
+      "font": "Arial.ttf",
+      "offset_y": -5,
+      "width": 10,
+      "height": 25
+    },
+    "C": {
+      "font": "Arial.ttf",
+      "offset_y": -5,
+      "width": 19,
+      "height": 25
+    },
+    "?": {
+      "font": "Arial.ttf",
+      "offset_y": -5,
+      "width": 14,
+      "height": 25
+    }
+  },
+  "19": {
+    "0": {
+      "font": "Arial.ttf",
+      "offset_y": -4,
+      "width": 11,
+      "height": 20
+    },
+    "1": {
+      "font": "Arial.ttf",
+      "offset_y": -4,
+      "width": 11,
+      "height": 20
+    },
+    "2": {
+      "font": "Arial.ttf",
+      "offset_y": -4,
+      "width": 11,
+      "height": 20
+    },
+    "3": {
+      "font": "Arial.ttf",
+      "offset_y": -4,
+      "width": 11,
+      "height": 20
+    },
+    "4": {
+      "font": "Arial.ttf",
+      "offset_y": -4,
+      "width": 11,
+      "height": 20
+    },
+    "5": {
+      "font": "Arial.ttf",
+      "offset_y": -4,
+      "width": 11,
+      "height": 20
+    },
+    "6": {
+      "font": "Arial.ttf",
+      "offset_y": -4,
+      "width": 11,
+      "height": 20
+    },
+    "7": {
+      "font": "Arial.ttf",
+      "offset_y": -4,
+      "width": 11,
+      "height": 20
+    },
+    "8": {
+      "font": "Arial.ttf",
+      "offset_y": -4,
+      "width": 11,
+      "height": 20
+    },
+    "9": {
+      "font": "Arial.ttf",
+      "offset_y": -4,
+      "width": 11,
+      "height": 20
+    },
+    "-": {
+      "font": "Arial.ttf",
+      "offset_y": -4,
+      "width": 6,
+      "height": 20
+    },
+    "?": {
+      "font": "Arial.ttf",
+      "offset_y": -4,
+      "width": 11,
+      "height": 20
+    },
+    "周": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 19,
+      "height": 21
+    },
+    "一": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 19,
+      "height": 21
+    },
+    "二": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 19,
+      "height": 21
+    },
+    "三": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 19,
+      "height": 21
+    },
+    "四": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 19,
+      "height": 21
+    },
+    "五": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 19,
+      "height": 21
+    },
+    "六": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 19,
+      "height": 21
+    },
+    "日": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 19,
+      "height": 21
+    }
+  }
+}

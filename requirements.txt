@@ -1,0 +1,4 @@
+pyserial==3.5
+pyobjc-core==11.1
+pyobjc-framework-Cocoa==11.1
+rumps==0.4.0
