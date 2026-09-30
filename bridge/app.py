@@ -31,11 +31,12 @@ else:
 WEATHER_HITBOX = (226, 0, 94, 82)
 BACK_HITBOX = (0, 0, 72, 56)
 INFO_HITBOX = (266, 0, 54, 52)
-CODEX_HITBOX = (12, 60, 296, 46)
+CODEX_HITBOX = (12, 57, 296, 38)
 CLOCK_SETTINGS_HITBOX = (268, 0, 52, 48)
-FLIP_HITBOX = (12, 114, 296, 46)
-BRIGHTNESS_DOWN_HITBOX = (214, 180, 44, 46)
-BRIGHTNESS_UP_HITBOX = (262, 180, 46, 46)
+FLIP_HITBOX = (12, 99, 296, 38)
+BLUETOOTH_HITBOX = (12, 141, 296, 38)
+BRIGHTNESS_DOWN_HITBOX = (214, 184, 44, 46)
+BRIGHTNESS_UP_HITBOX = (262, 184, 46, 46)
 
 
 def point_in_rect(x, y, rect):
@@ -358,7 +359,9 @@ class Bridge:
                                                c["utc_offset_minutes"], online=online)
                 elif device_page == "settings" and hasattr(device_display, "render_settings"):
                     device_display.render_settings(render_flip, device_brightness,
-                                                   touch_ready=True, show_codex=link_info.get("device_show_codex", True))
+                                                   touch_ready=True,
+                                                   show_codex=link_info.get("device_show_codex", True),
+                                                   bluetooth_enabled=link_info.get("device_bluetooth_enabled", False))
                 else:
                     device_display.render(packet, online=online)
             except Exception as exc:
@@ -474,7 +477,8 @@ class Bridge:
             source.decode("utf-8")
         except UnicodeDecodeError:
             raise ValueError("主程序必须使用 UTF-8 编码")
-        online_update_preserved = b"class ProgramUpdater" in source
+        online_update_preserved = (b"class ProgramUpdater" in source or
+                                   b"from program_update import ProgramUpdater" in source)
 
         self._set_program_update("preparing", 0, "正在准备 main.py",
                                  source=source_label)

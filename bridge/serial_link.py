@@ -25,6 +25,7 @@ class SerialLink:
         self.device_page = "dashboard"
         self.device_page_at = None
         self.device_show_codex = True
+        self.device_bluetooth_enabled = False
         self.device_brightness = 100
         self.device_brightness_at = None
         self.device_program_update = None
@@ -99,6 +100,9 @@ class SerialLink:
         if isinstance(message.get("show_codex"), bool):
             changed = self.device_show_codex != message["show_codex"]
             self.device_show_codex = message["show_codex"]
+        if isinstance(message.get("bluetooth_enabled"), bool):
+            changed = changed or self.device_bluetooth_enabled != message["bluetooth_enabled"]
+            self.device_bluetooth_enabled = message["bluetooth_enabled"]
         if isinstance(message.get("flip"), bool):
             self.device_flip = message["flip"]
             self.device_flip_at = time.time()
@@ -395,6 +399,7 @@ class SerialLink:
                 "device_page_at": self.device_page_at,
                 "device_brightness": self.device_brightness,
                 "device_show_codex": self.device_show_codex,
+                "device_bluetooth_enabled": self.device_bluetooth_enabled,
                 "device_brightness_at": self.device_brightness_at,
                 "device_program_update": self.device_program_update,
                 "device_boot_id": self.device_boot_id,

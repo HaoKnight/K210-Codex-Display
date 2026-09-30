@@ -78,9 +78,12 @@ class RefreshTests(unittest.TestCase):
         d.render_settings(False,100,live=True)
         c.calls=0;d.render_settings(False,100,live=True)
         self.assertEqual(c.calls,0)
-        for flip,codex in ((False,False),(True,False),(True,True)):
-            d.render_settings(flip,100,show_codex=codex,live=True)
-            ref=Canvas();ns['EmbeddedDisplay'](ref).render_settings(flip,100,show_codex=codex)
+        for flip,codex,bluetooth in ((False,False,False),(True,False,True),
+                                     (True,True,True),(False,True,False)):
+            d.render_settings(flip,100,show_codex=codex,
+                              bluetooth_enabled=bluetooth,live=True)
+            ref=Canvas();ns['EmbeddedDisplay'](ref).render_settings(
+                flip,100,show_codex=codex,bluetooth_enabled=bluetooth)
             self.assertEqual(c.image.tobytes(),ref.image.tobytes())
         info=dict(version='v1.0.0',uptime_ms=99000,rx_age_ms=99000,
                   boot_ts=1790056800,updated_at=1790056800)
