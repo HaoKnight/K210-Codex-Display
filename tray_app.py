@@ -238,4 +238,19 @@ class MenuBarApp(rumps.App):
 
 
 if __name__ == "__main__":
+    if any(flag in sys.argv for flag in ("--bluetooth-serial", "--bluetooth-pair",
+                                        "--bluetooth-select")):
+        # PyInstaller's windowed app clears the Python stream objects even
+        # when a helper is launched with stdin/stdout pipes.
+        if sys.stdin is None:
+            sys.stdin = os.fdopen(0, "r", encoding="utf-8")
+        if sys.stdout is None:
+            sys.stdout = os.fdopen(1, "w", encoding="utf-8", buffering=1)
+    if "--bluetooth-serial" in sys.argv:
+        from bridge.bluetooth_serial import main as run_bluetooth_serial
+        position = sys.argv.index("--bluetooth-serial")
+        sys.exit(run_bluetooth_serial(sys.argv[position + 1]))
+    if "--bluetooth-pair" in sys.argv or "--bluetooth-select" in sys.argv:
+        from bridge.bluetooth_pair import main as pair_bluetooth
+        sys.exit(pair_bluetooth("select" if "--bluetooth-select" in sys.argv else "pair"))
     MenuBarApp().run()

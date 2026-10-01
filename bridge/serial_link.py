@@ -1,6 +1,9 @@
 import base64
 import hashlib
 import json
+import re
+import subprocess
+import sys
 import time
 from bridge.device_support.protocol import LineBuffer
 
@@ -14,6 +17,7 @@ class SerialLink:
     def __init__(self, port, baud):
         self.port, self.baud = port, baud
         self.conn = None
+        self.bluetooth_transport = False
         self.next_open = 0
         self.last_ack = 0
         self.last_ack_seq = None
@@ -197,6 +201,16 @@ class SerialLink:
             raise ConnectionError("未选择 K210 串口")
         if self.conn is not None:
             return
+        if sys.platform == "darwin":
+            from .bluetooth_devices import address_for_port
+            address = address_for_port(self.port)
+            if address:
+                from .bluetooth_serial import BluetoothSerial
+                self.bluetooth_transport = True
+                self.conn = BluetoothSerial(address)
+                self.parser = LineBuffer()
+                return
+        self.bluetooth_transport = False
         import serial
         self.conn = serial.Serial(port=None, baudrate=self.baud, timeout=0,
                                   write_timeout=2)
@@ -319,7 +333,7 @@ class SerialLink:
             self.error = None
             return changed
         except Exception as exc:
-            self.error = type(exc).__name__ + ": 检查串口、占用及接线"
+            self.error = type(exc).__name__ + ": " + (str(exc) if self.bluetooth_transport else "检查串口、占用及接线")
             self.close()
             return False
 
@@ -373,7 +387,9 @@ class SerialLink:
             self._read_responses()
             self.error = None
         except Exception as exc:
-            self.error = type(exc).__name__ + (": 请安装 requirements.txt" if isinstance(exc, ImportError) else ": 检查串口、占用及接线")
+            detail = ("请安装 requirements.txt" if isinstance(exc, ImportError)
+                      else str(exc) if self.bluetooth_transport else "检查串口、占用及接线")
+            self.error = type(exc).__name__ + ": " + detail
             self.close()
         # Preview always receives the full state, never the heartbeat envelope.
         result = dict(packet)
@@ -409,9 +425,68 @@ class SerialLink:
                 "error": self.error}
 
 
+def _usb_serial_port(port):
+    """Identify a physically attached USB serial adapter."""
+    name = str(port.device).rsplit("/", 1)[-1].lower()
+    description = str(port.description or "").lower()
+    if getattr(port, "vid", None) is not None:
+        return True
+    if any(token in name for token in ("usbserial", "usbmodem", "usb-serial",
+                                      "slab_usbtouart", "wchusbserial")):
+        return True
+    if name.startswith("ttyusb") or name.startswith("ttyacm"):
+        return True
+    if name.startswith("com") and any(token in description for token in
+                                      ("usb", "ch340", "ch341", "cp210", "ftdi")):
+        return True
+    return False
+
+
+def _bluetooth_serial_addresses_from_ioreg(output):
+    """Map macOS Bluetooth serial devices to their hardware addresses."""
+    addresses = {}
+    for section in re.split(r"(?=^\+-o IOBluetoothDevice\b)", output, flags=re.M):
+        name = re.search(r'"BTTTYName" = "([^"]+)"', section)
+        address = re.search(r'"BD_ADDR" = <([0-9a-fA-F]{12})>', section)
+        if name and address:
+            value = address.group(1)
+            addresses["/dev/cu." + name.group(1)] = ":".join(
+                value[index:index + 2] for index in range(0, 12, 2))
+    return addresses
+
+
+def _connected_bluetooth_ports():
+    if sys.platform != "darwin":
+        return set()
+    try:
+        result = subprocess.run(
+            ["ioreg", "-r", "-c", "IOBluetoothDevice", "-d", "1", "-l"],
+            capture_output=True, text=True, timeout=3, check=True)
+        import objc
+        objc.loadBundle("IOBluetooth", globals(),
+                        bundle_path="/System/Library/Frameworks/IOBluetooth.framework")
+        device_class = objc.lookUpClass("IOBluetoothDevice")
+        addresses = _bluetooth_serial_addresses_from_ioreg(result.stdout)
+        return {port for port, address in addresses.items()
+                if (device := device_class.deviceWithAddressString_(address)) is not None
+                and device.isConnected()}
+    except (ImportError, OSError, subprocess.SubprocessError, RuntimeError):
+        return set()
+
+
 def list_ports():
     try:
         from serial.tools.list_ports import comports
-        return [{"device": p.device, "description": p.description} for p in comports()]
+        from .bluetooth_devices import list_devices
+        ports = []
+        for port in comports():
+            if _usb_serial_port(port):
+                ports.append({"device": port.device, "description": port.description,
+                              "kind": "usb"})
+        for device in list_devices():
+            ports.append({"device": device["device"], "address": device["address"],
+                          "description": device["name"] + (" · 已连接" if device["connected"] else " · 待连接"),
+                          "connected": device["connected"], "kind": "bluetooth"})
+        return ports
     except ImportError:
         return []

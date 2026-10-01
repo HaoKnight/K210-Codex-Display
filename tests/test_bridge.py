@@ -132,6 +132,33 @@ class BridgeTests(unittest.TestCase):
         self.assertTrue(state['sync']['ok'])
         self.assertTrue(all(r['status']=='skipped' for r in state['sync']['results'].values()))
 
+    def test_bluetooth_reconnect_same_port_releases_old_stream_first(self):
+        port = '/dev/cu.SerialModule'
+        self.bridge.config.update(serial_port=port, baudrate=9600)
+        old = SerialLink(port, 9600)
+        self.bridge.link = old
+        old.conn = FakeSerial()
+
+        def connect(address):
+            self.assertEqual(address, 'aa:bb:cc:dd:ee:ff')
+            self.assertIsNone(old.conn)
+            self.assertEqual(self.bridge.config['serial_port'], '')
+            return port
+
+        with patch('bridge.bluetooth_devices.serial_port_for_device', side_effect=connect), \
+             patch.object(self.bridge, 'reconnect_serial',
+                          return_value={'serial': {'error': None}}) as handshake:
+            self.assertEqual(self.bridge.connect_bluetooth('aa:bb:cc:dd:ee:ff'), port)
+        self.assertIsNot(self.bridge.link, old)
+        self.assertEqual(self.bridge.config['baudrate'], 9600)
+        handshake.assert_called_once_with()
+
+    def test_invalid_bluetooth_address_does_not_close_current_stream(self):
+        old = self.bridge.link
+        with self.assertRaises(ValueError):
+            self.bridge.connect_bluetooth('invalid')
+        self.assertIs(self.bridge.link, old)
+
 
 class FakeSerial:
     def __init__(self, messages=()):

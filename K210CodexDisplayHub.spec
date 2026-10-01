@@ -56,5 +56,6 @@ app = BUNDLE(
     info_plist={"CFBundleShortVersionString": "1.0.0", "CFBundleVersion": "1.0.0",
                 "CFBundleIconName": "AppIcon",
                 "LSUIElement": True, "NSHighResolutionCapable": True,
+                "NSBluetoothAlwaysUsageDescription": "查找、配对并连接 K210 外接蓝牙串口模块",
                 "NSHumanReadableCopyright": "K210 Codex Display Hub"},
 )

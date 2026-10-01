@@ -66,6 +66,7 @@ class Bridge:
         self.lock = threading.Lock()
         self.tick_lock = threading.Lock()
         self.reconfigure_lock = threading.Lock()
+        self.serial_connection_lock = threading.Lock()
         self.program_update_lock = threading.Lock()
         self.sync_lock = threading.Lock()
         self.quota_refresh_lock = threading.Lock()
@@ -644,6 +645,21 @@ class Bridge:
         self.apply_device_settings()
         return self.read()
 
+    def connect_bluetooth(self, address):
+        from .bluetooth_devices import ADDRESS, serial_port_for_device
+        if not isinstance(address, str) or not ADDRESS.fullmatch(address):
+            raise ValueError("蓝牙设备地址无效")
+        with self.serial_connection_lock:
+            # Release the stream before reopening the selected device. Applying
+            # the same port must also create a new channel and a fresh handshake.
+            self.save_config({"serial_port": ""})
+            port = serial_port_for_device(address)
+            self.save_config({"serial_port": port, "baudrate": 9600})
+            state = self.reconnect_serial()
+            if state["serial"].get("error"):
+                raise ConnectionError(state["serial"]["error"])
+            return port
+
 
 def handler_for(bridge):
     class Handler(BaseHTTPRequestHandler):
@@ -718,6 +734,39 @@ def handler_for(bridge):
                     return
                 body = json.dumps({"ok": True, "state": state}, ensure_ascii=False).encode()
                 self.send_body(200, body)
+                return
+            if path in ("/api/bluetooth/pair", "/api/bluetooth/select"):
+                from .bluetooth_devices import pick_device
+                try:
+                    result = pick_device(path.rsplit("/", 1)[-1])
+                    self.send_body(200, json.dumps(result, ensure_ascii=False).encode())
+                except (OSError, RuntimeError, TimeoutError) as exc:
+                    self.send_body(500, json.dumps({"ok": False, "error": str(exc)},
+                                                   ensure_ascii=False).encode())
+                return
+            if path == "/api/bluetooth/connect":
+                if self.headers.get_content_type() != "application/json":
+                    self.send_error(415)
+                    return
+                try:
+                    length = int(self.headers.get("Content-Length", "0"))
+                    if not 0 < length <= 1024:
+                        raise ValueError("蓝牙连接请求大小无效")
+                    request = json.loads(self.rfile.read(length))
+                    if not isinstance(request, dict) or set(request) != {"address"}:
+                        raise ValueError("蓝牙连接请求格式无效")
+                    port = bridge.connect_bluetooth(request["address"])
+                    self.send_body(200, json.dumps({"ok": True, "port": port},
+                                                   ensure_ascii=False).encode())
+                except (ValueError, TypeError, json.JSONDecodeError) as exc:
+                    self.send_body(400, json.dumps({"ok": False, "error": str(exc)},
+                                                   ensure_ascii=False).encode())
+                except ConnectionError as exc:
+                    self.send_body(409, json.dumps({"ok": False, "error": str(exc)},
+                                                   ensure_ascii=False).encode())
+                except (OSError, RuntimeError) as exc:
+                    self.send_body(500, json.dumps({"ok": False, "error": str(exc)},
+                                                   ensure_ascii=False).encode())
                 return
             if path == "/api/device-touch":
                 if self.headers.get_content_type() != "application/json":
