@@ -1,9 +1,9 @@
 <div align="center">
-  <img src="./assets/AppIcon-source.png" alt="K210 Codex Display Hub 图标" width="112" height="112" />
+  <img src="./icons/AppIcon-source.png" alt="K210 Codex Display Hub 图标" width="112" height="112" />
   <h1>K210 Codex Display Hub</h1>
   <p>在 K210 小屏和本机网页查看 Codex 额度、任务状态、时间与天气。</p>
   <p>
-    <img src="https://img.shields.io/badge/version-1.0.0-2ea44f" alt="版本 1.0.0" />
+    <img src="https://img.shields.io/badge/version-1.1.0-2ea44f" alt="版本 1.1.0" />
     <img src="https://img.shields.io/badge/host-macOS-000000?logo=apple" alt="上位机平台 macOS" />
     <img src="https://img.shields.io/badge/device-K210%20%2F%20CanMV-17A398" alt="K210 和 CanMV" />
   </p>

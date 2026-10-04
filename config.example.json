@@ -8,6 +8,7 @@
   "activity_stale_seconds": 300,
   "clock_sync_seconds": 7200,
   "flip": false,
+  "show_menu_bar_icon": true,
   "serial_port": "",
   "baudrate": 115200,
   "http_port": 2100,

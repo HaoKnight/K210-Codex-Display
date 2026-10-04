@@ -5,8 +5,8 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 
 ROOT = Path(__file__).resolve().parents[1]
-ASSETS = ROOT / "assets"
-APP_ICON_SOURCE = ASSETS / "AppIcon-source.png"
+ICONS = ROOT / "icons"
+APP_ICON_SOURCE = ICONS / "AppIcon-source.png"
 
 
 def menu_icon():
@@ -28,7 +28,7 @@ def menu_icon():
     draw.ellipse((p(9.65), p(26.15), p(12.35), p(28.85)), fill=ink)
     draw.ellipse((p(23.65), p(26.15), p(26.35), p(28.85)), fill=ink)
 
-    image.resize((36, 36), Image.Resampling.LANCZOS).save(ASSETS / "menuTemplate.png")
+    image.resize((36, 36), Image.Resampling.LANCZOS).save(ICONS / "menuTemplate.png")
 
 
 def app_icon():
@@ -72,10 +72,10 @@ def app_icon():
     transparent = Image.new("RGBA", mark.size, (0, 0, 0, 0))
     icon.alpha_composite(Image.composite(mark, transparent, mark_mask),
                          (offset, offset))
-    icon.save(ASSETS / "AppIcon.icns", format="ICNS")
+    icon.save(ICONS / "AppIcon.icns", format="ICNS")
 
 
 if __name__ == "__main__":
-    ASSETS.mkdir(exist_ok=True)
+    ICONS.mkdir(exist_ok=True)
     menu_icon()
     app_icon()

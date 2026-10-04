@@ -251,7 +251,7 @@ def read_app_server(binary, home, timeout=20):
                 send({"id": msg["id"], "error": {"code": -32601, "message": "Unsupported"}})
     try:
         send({"id": 1, "method": "initialize", "params": {
-            "clientInfo": {"name": "k210_codex_bridge", "version": "1.0.0"}}})
+            "clientInfo": {"name": "k210_codex_bridge", "version": "1.1.0"}}})
         receive(1)
         send({"method": "initialized", "params": {}})
         send({"id": 2, "method": "account/rateLimits/read", "params": {}})
@@ -281,7 +281,7 @@ def weather_fetch(config):
         "longitude": config["longitude"], "current": "temperature_2m,weather_code",
         "timezone": "GMT", "timeformat": "unixtime"})
     data = fetch_json("https://api.open-meteo.com/v1/forecast?" + query,
-                      "K210-Codex-Bridge/1.0.0")["current"]
+                      "K210-Codex-Bridge/1.1.0")["current"]
     code = data["weather_code"]
     condition = ("晴" if code == 0 else "多云" if code in (1, 2, 3)
                  else "雾" if code in (45, 48) else "雪" if code in (71, 73, 75, 77, 85, 86)
@@ -294,7 +294,7 @@ def weather_fetch(config):
 def geocode_city(city):
     query = urllib.parse.urlencode({"name": city, "count": 1, "language": "zh", "format": "json"})
     results = fetch_json("https://geocoding-api.open-meteo.com/v1/search?" + query,
-                         "K210-Codex-Display-Hub/1.0.0").get("results") or []
+                         "K210-Codex-Display-Hub/1.1.0").get("results") or []
     if not results or not finite(results[0].get("latitude")) or not finite(results[0].get("longitude")):
         raise ValueError("找不到这个城市，请检查名称")
     return results[0]["latitude"], results[0]["longitude"]
@@ -302,7 +302,7 @@ def geocode_city(city):
 
 def locate_city():
     """Use the network's public IP to estimate the current city."""
-    data = fetch_json("https://ipwho.is/", "K210-Codex-Display-Hub/1.0.0")
+    data = fetch_json("https://ipwho.is/", "K210-Codex-Display-Hub/1.1.0")
     city = data.get("city")
     lat, lon = data.get("latitude"), data.get("longitude")
     if (data.get("success") is False or not isinstance(city, str) or not city.strip()
@@ -313,7 +313,7 @@ def locate_city():
     try:
         query = urllib.parse.urlencode({"name": city, "count": 1, "language": "zh", "format": "json"})
         results = fetch_json("https://geocoding-api.open-meteo.com/v1/search?" + query,
-                             "K210-Codex-Display-Hub/1.0.0").get("results") or []
+                             "K210-Codex-Display-Hub/1.1.0").get("results") or []
         if results:
             city = results[0].get("name") or city
     except Exception:

@@ -13,6 +13,7 @@ import urllib.request
 import webbrowser
 
 import rumps
+from PyObjCTools import AppHelper
 
 from bridge.app import create_runtime, ROOT
 
@@ -73,8 +74,9 @@ def launch_arguments():
 
 
 class HubRuntime:
-    def __init__(self):
+    def __init__(self, on_menu_bar_visibility_changed=None):
         self.bridge, self.server, self.url = create_runtime(user_config_path())
+        self.bridge.on_menu_bar_visibility_changed = on_menu_bar_visibility_changed
         self.thread = None
 
     def start(self):
@@ -93,7 +95,7 @@ class HubRuntime:
 
 class MenuBarApp(rumps.App):
     def __init__(self):
-        icon = resource_path("assets/menuTemplate.png")
+        icon = resource_path("icons/menuTemplate.png")
         super().__init__(APP_NAME, icon=str(icon), template=True, quit_button=None)
         self.lock_file = self.acquire_instance_lock()
         self.runtime = None
@@ -107,13 +109,14 @@ class MenuBarApp(rumps.App):
         self.sync_item = rumps.MenuItem("立即同步", callback=self.sync_now)
         self.reconnect_item = rumps.MenuItem("重新连接 K210", callback=self.reconnect)
         self.login_item = rumps.MenuItem("开机自动启动", callback=self.toggle_login)
+        self.hide_icon_item = rumps.MenuItem("隐藏菜单栏图标", callback=self.hide_icon)
         self.login_item.state = 1 if LAUNCH_AGENT.exists() else 0
         self.menu = [self.status_item, None, self.open_item, self.sync_item,
-                     self.reconnect_item, self.login_item, None,
+                     self.reconnect_item, self.login_item, self.hide_icon_item, None,
                      rumps.MenuItem("退出软件", callback=self.quit_app)]
 
         try:
-            self.runtime = HubRuntime()
+            self.runtime = HubRuntime(self.menu_bar_visibility_changed)
             self.runtime.start()
             self.url = self.runtime.url
             write_diagnostic("startup ok: " + self.url)
@@ -122,11 +125,13 @@ class MenuBarApp(rumps.App):
             write_diagnostic(traceback.format_exc())
             self.status_item.title = "后台：端口被占用"
             self.reconnect_item.set_callback(None)
+            self.hide_icon_item.set_callback(None)
         except Exception as exc:
             self.start_error = type(exc).__name__ + ": " + str(exc)
             write_diagnostic(traceback.format_exc())
             self.status_item.title = "后台：启动失败"
             self.reconnect_item.set_callback(None)
+            self.hide_icon_item.set_callback(None)
 
         self.timer = rumps.Timer(self.refresh_status, 2)
         self.timer.start()
@@ -179,8 +184,35 @@ class MenuBarApp(rumps.App):
         except Exception:
             self.status_item.title = "后台：不可用"
 
+    def menu_bar_visibility_changed(self):
+        if threading.current_thread() is threading.main_thread():
+            self.refresh_icon_visibility()
+        else:
+            AppHelper.callAfter(self.refresh_icon_visibility)
+
+    @rumps.events.before_start
+    def refresh_icon_visibility(self):
+        """Apply saved visibility on the main thread, keeping the runtime alive."""
+        status_item = getattr(getattr(self, "_nsapp", None), "nsstatusitem", None)
+        if status_item is None or not self.runtime:
+            return
+        with self.runtime.bridge.lock:
+            visible = self.runtime.bridge.config.get("show_menu_bar_icon", True)
+        if bool(status_item.isVisible()) != visible:
+            status_item.setVisible_(visible)
+
     def open_console(self, _):
         webbrowser.open(self.url)
+
+    def hide_icon(self, _):
+        if not self.runtime:
+            return
+        try:
+            self.runtime.bridge.save_config({"show_menu_bar_icon": False})
+        except Exception as exc:
+            rumps.alert("隐藏图标失败", str(exc))
+            return
+        self.refresh_icon_visibility()
 
     def sync_now(self, _):
         if self.action_busy:

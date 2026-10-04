@@ -85,7 +85,7 @@ class RefreshTests(unittest.TestCase):
             ref=Canvas();ns['EmbeddedDisplay'](ref).render_settings(
                 flip,100,show_codex=codex,bluetooth_enabled=bluetooth)
             self.assertEqual(c.image.tobytes(),ref.image.tobytes())
-        info=dict(version='v1.0.0',uptime_ms=99000,rx_age_ms=99000,
+        info=dict(version='v1.1.0',uptime_ms=99000,rx_age_ms=99000,
                   boot_ts=1790056800,updated_at=1790056800)
         for age,online in ((99000,True),(100000,True),(0,True),(1000,False)):
             info.update(uptime_ms=age,rx_age_ms=age)

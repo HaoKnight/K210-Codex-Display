@@ -62,6 +62,7 @@ class Bridge:
     def __init__(self, config, config_path=None):
         self.config = config
         self.config_path = Path(config_path) if config_path else ROOT / "config.local.json"
+        self.on_menu_bar_visibility_changed = None
         self.stop = threading.Event()
         self.lock = threading.Lock()
         self.tick_lock = threading.Lock()
@@ -392,6 +393,7 @@ class Bridge:
                                    if include_frame or key != "frame"})
             state["program_update"] = copy.deepcopy(self.program_update)
             state["sync"] = copy.deepcopy(self.last_sync)
+            state["show_menu_bar_icon"] = self.config.get("show_menu_bar_icon", True)
             return state
 
     def _set_program_update(self, status, progress, message, **details):
@@ -560,6 +562,7 @@ class Bridge:
         return {"source": c["source"], "serial_port": c["serial_port"],
                 "baudrate": c["baudrate"], "utc_offset_minutes": c["utc_offset_minutes"],
                 "flip": bool(c.get("flip", False)),
+                "show_menu_bar_icon": c.get("show_menu_bar_icon", True),
                 "weather": {key: c["weather"][key] for key in
                             ("enabled", "city", "auto_location")}}
 
@@ -567,13 +570,15 @@ class Bridge:
         if not isinstance(update, dict):
             raise ValueError("配置格式无效")
         allowed = {"source", "serial_port", "baudrate", "utc_offset_minutes", "flip",
-                   "weather"}
+                   "weather", "show_menu_bar_icon"}
         if set(update) - allowed:
             raise ValueError("包含不支持的配置项")
         with self.reconfigure_lock:
             with self.lock:
                 new = copy.deepcopy(self.config)
-            for key in ("source", "serial_port", "baudrate", "utc_offset_minutes", "flip"):
+            previous_icon_visibility = new.get("show_menu_bar_icon", True)
+            for key in ("source", "serial_port", "baudrate", "utc_offset_minutes", "flip",
+                        "show_menu_bar_icon"):
                 if key in update:
                     new[key] = update[key]
             if "weather" in update:
@@ -595,7 +600,16 @@ class Bridge:
             temporary = self.config_path.with_suffix(self.config_path.suffix + ".tmp")
             temporary.write_text(json.dumps(new, ensure_ascii=False, indent=2) + "\n")
             temporary.replace(self.config_path)
-            self.reconfigure(new)
+            if set(update) == {"show_menu_bar_icon"}:
+                # Native UI preferences must not wait for an in-flight serial exchange.
+                with self.lock:
+                    self.config["show_menu_bar_icon"] = new["show_menu_bar_icon"]
+            else:
+                self.reconfigure(new)
+            icon_visibility_changed = (previous_icon_visibility !=
+                                       new.get("show_menu_bar_icon", True))
+        if icon_visibility_changed and self.on_menu_bar_visibility_changed:
+            self.on_menu_bar_visibility_changed()
         return self.config_view()
 
     def reconfigure(self, new):
@@ -875,6 +889,8 @@ def validate(c):
             raise ValueError("Invalid " + name)
     if not isinstance(c.get("flip"), bool):
         raise ValueError("Invalid flip")
+    if not isinstance(c.get("show_menu_bar_icon", True), bool):
+        raise ValueError("Invalid show_menu_bar_icon")
     w = c["weather"]
     if not isinstance(w.get("auto_location", False), bool):
         raise ValueError("Invalid auto_location")

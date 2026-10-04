@@ -84,7 +84,7 @@ class DeviceInfoTests(unittest.TestCase):
                 self.assertion(x >= 0 and x+self.text_width(value,scale)<=320,(x,value))
         display=Capture(Canvas())
         display.labels=[];display.assertion=self.assertTrue
-        display.render_info({'version':'v1.0.0','uptime_ms':360000000,'rx_age_ms':15000}, online=False)
+        display.render_info({'version':'v1.1.0','uptime_ms':360000000,'rx_age_ms':15000}, online=False)
         self.assertIn(('未连接',ns['RED']),display.labels)
         self.assertIn(('15 秒前',ns['MUTED']),display.labels)
 
@@ -149,7 +149,7 @@ class HostInfoTests(unittest.TestCase):
     def test_host_extrapolates_reported_age_and_uptime(self):
         link=SerialLink('',115200)
         with patch('bridge.serial_link.time.monotonic',return_value=10):
-            link._accept_device_ui({'boot_id':2,'device_info':{'version':'v1.0.0','uptime_ms':4000,'rx_age_ms':0}})
+            link._accept_device_ui({'boot_id':2,'device_info':{'version':'v1.1.0','uptime_ms':4000,'rx_age_ms':0}})
         with patch('bridge.serial_link.time.monotonic',return_value=12):
             info=link.info()['device_info']
         self.assertEqual(info['uptime_ms'],6000)
@@ -168,7 +168,7 @@ class HostInfoTests(unittest.TestCase):
             bridge.device_touch(25,25)
             self.assertEqual(bridge.link.device_page,'settings')
             bridge.link.device_boot_id=2
-            bridge.link.device_info={'version':'v1.0.0'}
+            bridge.link.device_info={'version':'v1.1.0'}
             bridge.program_update={'status':'success','device_boot_id':2,'updated_at':1790035800}
             bridge.tick(send=False,poll=False)
             self.assertEqual(bridge.read()['packet']['program_updated_at'],1790035800)

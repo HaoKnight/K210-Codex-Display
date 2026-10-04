@@ -6,7 +6,7 @@ import tempfile
 import threading
 import time
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from http.server import ThreadingHTTPServer
 from urllib.request import urlopen
 
@@ -58,6 +58,53 @@ class BridgeTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.bridge.save_config({'weather': {'city': ''}})
         geo.assert_not_called()
+
+    def test_menu_bar_visibility_persists_without_replacing_serial_link(self):
+        link = self.bridge.link
+        changed = self.bridge.on_menu_bar_visibility_changed = Mock()
+        self.assertTrue(self.bridge.config_view()['show_menu_bar_icon'])
+        self.bridge.save_config({'show_menu_bar_icon': False})
+        self.assertFalse(load_config(self.bridge.config_path)['show_menu_bar_icon'])
+        self.assertFalse(self.bridge.read(include_frame=False)['show_menu_bar_icon'])
+        self.assertIs(self.bridge.link, link)
+        changed.assert_called_once_with()
+        self.bridge.save_config({'utc_offset_minutes': 60})
+        self.assertFalse(self.bridge.config_view()['show_menu_bar_icon'])
+        changed.assert_called_once_with()
+        self.bridge.save_config({'show_menu_bar_icon': True})
+        self.assertTrue(load_config(self.bridge.config_path)['show_menu_bar_icon'])
+        self.assertTrue(self.bridge.read(include_frame=False)['show_menu_bar_icon'])
+        self.assertIs(self.bridge.link, link)
+        self.assertEqual(changed.call_count, 2)
+
+    def test_menu_bar_visibility_does_not_wait_for_busy_serial_exchange(self):
+        saved = threading.Event()
+        errors = []
+        def save():
+            try:
+                self.bridge.save_config({'show_menu_bar_icon': False})
+            except Exception as exc:
+                errors.append(exc)
+            finally:
+                saved.set()
+        with self.bridge.tick_lock:
+            worker = threading.Thread(target=save)
+            worker.start()
+            completed_while_busy = saved.wait(timeout=1)
+        worker.join(timeout=2)
+        self.assertTrue(completed_while_busy)
+        self.assertEqual(errors, [])
+        self.assertFalse(self.bridge.config_view()['show_menu_bar_icon'])
+
+    def test_menu_bar_visibility_rejects_non_boolean_without_saving(self):
+        before = self.bridge.config_view()
+        changed = self.bridge.on_menu_bar_visibility_changed = Mock()
+        for value in ('false', 0, None):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                self.bridge.save_config({'show_menu_bar_icon': value})
+        self.assertEqual(self.bridge.config_view(), before)
+        self.assertFalse(self.bridge.config_path.exists())
+        changed.assert_not_called()
 
     def test_update_requires_changed_boot(self):
         self.pending_update()
