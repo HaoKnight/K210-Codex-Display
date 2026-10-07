@@ -16,7 +16,8 @@ from urllib.parse import parse_qs, urlsplit
 from bridge.device_support.display import Display
 from .live_renderer import LiveRenderer
 from .serial_link import SerialLink, list_ports
-from .sources import (LogObserver, geocode_city, locate_city, normalize_limits, read_app_server,
+from .cities import city_catalog, city_location
+from .sources import (LogObserver, chinese_city_name, geocode_city, locate_city, normalize_limits, read_app_server,
                       weather_fetch, quota_error_message)
 
 if getattr(sys, "frozen", False):
@@ -201,6 +202,8 @@ class Bridge:
             effective = dict(c["weather"])
             if effective.get("auto_location", False):
                 effective.update(locate_city())
+            elif not chinese_city_name(effective["city"]):
+                effective.update(geocode_city(effective["city"]))
             weather = weather_fetch(effective)
             weather["city"] = effective["city"]
         except Exception as exc:
@@ -214,6 +217,21 @@ class Bridge:
                 self.weather = weather
                 self.weather_error = None
         return None
+
+    def refresh_location(self):
+        """Refresh IP location and weather, then publish the updated display."""
+        with self.reconfigure_lock:
+            with self.lock:
+                c = copy.deepcopy(self.config)
+            if not c["weather"].get("auto_location", False):
+                raise ValueError("请先启用并保存自动获取位置")
+            if c["source"] == "demo":
+                raise ValueError("请切换到实时数据来源后刷新位置")
+            error = self.refresh_weather(c)
+            self.tick(send=True, poll=False)
+            if error:
+                raise RuntimeError(error)
+        return self.read()
 
     def sync_now(self):
         """Force one full refresh: logs, quota, weather, device time, then redraw."""
@@ -322,8 +340,11 @@ class Bridge:
             weather = {"temp": 26, "condition": "多云", "at": now}
         self.seq += 1
         device_ui = self.link.ui_state()
+        weather_city = chinese_city_name(weather.get("city", c["weather"]["city"])) or "未知城市"
         packet = {"v": 1, "type": "state", "seq": self.seq, "ts": int(now),
-                  "offset": c["utc_offset_minutes"], "city": weather.get("city", c["weather"]["city"]),
+                  "offset": c["utc_offset_minutes"],
+                  "city": (weather_city[:-1] if weather_city.endswith("市")
+                           and weather_city != "未知城市" else weather_city),
                   "temp": weather["temp"], "condition": weather["condition"],
                   "status": activity["status"], "model": activity["model"],
                   "flip": bool(c.get("flip", False)),
@@ -363,7 +384,8 @@ class Bridge:
                     device_display.render_settings(render_flip, device_brightness,
                                                    touch_ready=True,
                                                    show_codex=link_info.get("device_show_codex", True),
-                                                   bluetooth_enabled=link_info.get("device_bluetooth_enabled", False))
+                                                   bluetooth_enabled=link_info.get("device_bluetooth_enabled", False),
+                                                   online=online)
                 else:
                     device_display.render(packet, online=online)
             except Exception as exc:
@@ -376,6 +398,7 @@ class Bridge:
                 packet, online=online)
         with self.lock:
             self.snapshot = {"packet": packet, "frame": canvas.ops, "serial": link_info,
+                "weather_city": weather_city,
                 "frame_version": hashlib.sha256(json.dumps(canvas.ops, separators=(",", ":")).encode()).hexdigest()[:20],
                 "activity": activity,
                 "quota_source": origin, "quota_updated_at": at or None,
@@ -563,8 +586,9 @@ class Bridge:
                 "baudrate": c["baudrate"], "utc_offset_minutes": c["utc_offset_minutes"],
                 "flip": bool(c.get("flip", False)),
                 "show_menu_bar_icon": c.get("show_menu_bar_icon", True),
-                "weather": {key: c["weather"][key] for key in
-                            ("enabled", "city", "auto_location")}}
+                "weather": {"enabled": c["weather"]["enabled"],
+                            "city": chinese_city_name(c["weather"]["city"]) or "未知城市",
+                            "auto_location": c["weather"]["auto_location"]}}
 
     def save_config(self, update):
         if not isinstance(update, dict):
@@ -583,19 +607,23 @@ class Bridge:
                     new[key] = update[key]
             if "weather" in update:
                 weather = update["weather"]
-                weather_allowed = {"enabled", "city", "auto_location"}
+                weather_allowed = {"enabled", "city", "city_code", "auto_location"}
                 if not isinstance(weather, dict) or set(weather) - weather_allowed:
                     raise ValueError("天气配置格式无效")
                 previous_city = new["weather"]["city"]
                 weather = dict(weather)
+                selected_city_code = weather.pop("city_code", None)
                 if weather.get("auto_location", new["weather"].get("auto_location", False)):
                     weather.pop("city", None)
+                    selected_city_code = None
                 new["weather"].update(weather)
                 new["weather"]["enabled"] = True
                 validate(new)
-                if "city" in weather and weather["city"] != previous_city:
-                    latitude, longitude = geocode_city(weather["city"])
-                    new["weather"].update(latitude=latitude, longitude=longitude)
+                if selected_city_code is not None:
+                    new["weather"].update(city_location(selected_city_code))
+                elif "city" in weather and (weather["city"] != previous_city
+                                         or not chinese_city_name(weather["city"])):
+                    new["weather"].update(geocode_city(weather["city"]))
             validate(new)
             temporary = self.config_path.with_suffix(self.config_path.suffix + ".tmp")
             temporary.write_text(json.dumps(new, ensure_ascii=False, indent=2) + "\n")
@@ -712,6 +740,9 @@ def handler_for(bridge):
             elif path == "/api/config":
                 body = json.dumps(bridge.config_view(), ensure_ascii=False).encode()
                 mime = "application/json; charset=utf-8"
+            elif path == "/api/cities":
+                body = json.dumps(city_catalog(), ensure_ascii=False).encode()
+                mime = "application/json; charset=utf-8"
             elif path == "/api/ports":
                 body = json.dumps(list_ports(), ensure_ascii=False).encode()
                 mime = "application/json; charset=utf-8"
@@ -738,6 +769,18 @@ def handler_for(bridge):
             if not self.allowed_host():
                 return
             path = self.path.split("?", 1)[0]
+            if path == "/api/location-refresh":
+                try:
+                    state = bridge.refresh_location()
+                    self.send_body(200, json.dumps({"ok": True, "state": state},
+                                                   ensure_ascii=False).encode())
+                except ValueError as exc:
+                    self.send_body(400, json.dumps({"ok": False, "error": str(exc)},
+                                                   ensure_ascii=False).encode())
+                except Exception as exc:
+                    self.send_body(500, json.dumps({"ok": False, "error": str(exc)},
+                                                   ensure_ascii=False).encode())
+                return
             if path == "/api/sync":
                 try:
                     state = bridge.sync_now()

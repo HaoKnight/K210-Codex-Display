@@ -150,7 +150,7 @@ class SerialLink:
         info = message.get("device_info")
         if isinstance(info, dict):
             version = info.get("version")
-            numeric = ("uptime_ms", "rx_age_ms", "boot_ts", "updated_at")
+            numeric = ("uptime_ms", "total_elapsed_ms", "rx_age_ms", "boot_ts", "updated_at")
             valid = isinstance(version, str) and 0 < len(version) <= 32
             valid = valid and all(info.get(key) is None or (
                 isinstance(info[key], int) and not isinstance(info[key], bool)
@@ -400,7 +400,7 @@ class SerialLink:
         device_info = dict(self.device_info)
         if self.device_info_at is not None:
             elapsed = max(0, int((time.monotonic() - self.device_info_at) * 1000))
-            for key in ("uptime_ms", "rx_age_ms"):
+            for key in ("uptime_ms", "total_elapsed_ms", "rx_age_ms"):
                 if device_info.get(key) is not None:
                     device_info[key] += elapsed
         return {"port": self.port or "未选择（仅预览）", "open": self.conn is not None,

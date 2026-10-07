@@ -23,11 +23,15 @@ class LiveRenderer:
         try:
             stat = self.path.stat()
             signature = (stat.st_mtime_ns, stat.st_ctime_ns, stat.st_size, stat.st_ino)
+            font_path = self.path.with_name('font.bin')
+            font_stat = font_path.stat() if font_path.exists() else None
+            signature += (None if font_stat is None else
+                          (font_stat.st_mtime_ns, font_stat.st_size, font_stat.st_ino),)
             if signature == self._stat:
                 return self._display_type
             source = self.path.read_bytes()
             self._stat = signature
-            digest = hashlib.sha256(source).digest()
+            digest = hashlib.sha256(source + (font_path.read_bytes() if font_stat else b'')).digest()
             if digest == self._digest:
                 if self._display_type is not None:
                     self.load_error = None

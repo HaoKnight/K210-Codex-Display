@@ -13,6 +13,7 @@ import urllib.request
 import webbrowser
 
 import rumps
+from AppKit import NSColor, NSFont, NSMakeRect, NSTextField, NSView
 from PyObjCTools import AppHelper
 
 from bridge.app import create_runtime, ROOT
@@ -93,6 +94,30 @@ class HubRuntime:
         self.bridge.close()
 
 
+class ConnectionStatusItem(rumps.MenuItem):
+    """Read-only status row whose color is preserved in a disabled menu item."""
+
+    def __init__(self):
+        super().__init__("K210：未连接")
+        self.label = NSTextField.labelWithString_(self.title)
+        self.label.setFont_(NSFont.menuFontOfSize_(0))
+        self.label.sizeToFit()
+        height = self.label.frame().size.height
+        self.label.setFrame_(NSMakeRect(18, 4, self.label.frame().size.width, height))
+        view = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, 180, height + 8))
+        view.addSubview_(self.label)
+        self._menuitem.setView_(view)
+        self.set_connected(False)
+
+    def set_connected(self, connected, detail=None):
+        self.title = "K210：已链接" if connected else "K210：未连接"
+        self.label.setStringValue_(self.title)
+        self.label.setTextColor_(NSColor.systemGreenColor() if connected
+                                 else NSColor.systemRedColor())
+        self._menuitem.setToolTip_(detail)
+        self.label.setToolTip_(detail)
+
+
 class MenuBarApp(rumps.App):
     def __init__(self):
         icon = resource_path("icons/menuTemplate.png")
@@ -104,7 +129,7 @@ class MenuBarApp(rumps.App):
         self.action_results = queue.Queue()
         self.action_busy = False
 
-        self.status_item = rumps.MenuItem("设备：正在启动…")
+        self.status_item = ConnectionStatusItem()
         self.open_item = rumps.MenuItem("打开控制台", callback=self.open_console)
         self.sync_item = rumps.MenuItem("立即同步", callback=self.sync_now)
         self.reconnect_item = rumps.MenuItem("重新连接 K210", callback=self.reconnect)
@@ -123,13 +148,13 @@ class MenuBarApp(rumps.App):
         except OSError as exc:
             self.start_error = str(exc)
             write_diagnostic(traceback.format_exc())
-            self.status_item.title = "后台：端口被占用"
+            self.status_item.set_connected(False, "后台：端口被占用")
             self.reconnect_item.set_callback(None)
             self.hide_icon_item.set_callback(None)
         except Exception as exc:
             self.start_error = type(exc).__name__ + ": " + str(exc)
             write_diagnostic(traceback.format_exc())
-            self.status_item.title = "后台：启动失败"
+            self.status_item.set_connected(False, "后台：启动失败")
             self.reconnect_item.set_callback(None)
             self.hide_icon_item.set_callback(None)
 
@@ -174,15 +199,15 @@ class MenuBarApp(rumps.App):
         try:
             serial = self.state()["serial"]
             if serial["connected"]:
-                self.status_item.title = "K210：已连接"
+                self.status_item.set_connected(True)
             elif serial["open"]:
-                self.status_item.title = "K210：等待设备确认"
+                self.status_item.set_connected(False, "等待 K210 设备确认")
             elif serial.get("error"):
-                self.status_item.title = "K210：串口异常"
+                self.status_item.set_connected(False, "串口异常：" + str(serial["error"]))
             else:
-                self.status_item.title = "K210：未连接"
+                self.status_item.set_connected(False)
         except Exception:
-            self.status_item.title = "后台：不可用"
+            self.status_item.set_connected(False, "后台：不可用")
 
     def menu_bar_visibility_changed(self):
         if threading.current_thread() is threading.main_thread():

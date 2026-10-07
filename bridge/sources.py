@@ -251,7 +251,7 @@ def read_app_server(binary, home, timeout=20):
                 send({"id": msg["id"], "error": {"code": -32601, "message": "Unsupported"}})
     try:
         send({"id": 1, "method": "initialize", "params": {
-            "clientInfo": {"name": "k210_codex_bridge", "version": "1.1.0"}}})
+            "clientInfo": {"name": "k210_codex_bridge", "version": "1.2.0"}}})
         receive(1)
         send({"method": "initialized", "params": {}})
         send({"id": 2, "method": "account/rateLimits/read", "params": {}})
@@ -281,7 +281,7 @@ def weather_fetch(config):
         "longitude": config["longitude"], "current": "temperature_2m,weather_code",
         "timezone": "GMT", "timeformat": "unixtime"})
     data = fetch_json("https://api.open-meteo.com/v1/forecast?" + query,
-                      "K210-Codex-Bridge/1.1.0")["current"]
+                      "K210-Codex-Bridge/1.2.0")["current"]
     code = data["weather_code"]
     condition = ("晴" if code == 0 else "多云" if code in (1, 2, 3)
                  else "雾" if code in (45, 48) else "雪" if code in (71, 73, 75, 77, 85, 86)
@@ -291,31 +291,46 @@ def weather_fetch(config):
     return {"temp": data["temperature_2m"], "condition": condition, "at": data["time"]}
 
 
+def chinese_city_name(city):
+    """Accept a Chinese place name; never display a Latin-name fallback."""
+    if not isinstance(city, str):
+        return None
+    city = city.strip()
+    def is_han(char):
+        return 0x3400 <= ord(char) <= 0x9FFF or 0x20000 <= ord(char) <= 0x323AF
+    if not any(is_han(char) for char in city):
+        return None
+    if any(not is_han(char) and char not in " ·・-—（）()" for char in city):
+        return None
+    return city[:16]
+
+
 def geocode_city(city):
     query = urllib.parse.urlencode({"name": city, "count": 1, "language": "zh", "format": "json"})
     results = fetch_json("https://geocoding-api.open-meteo.com/v1/search?" + query,
-                         "K210-Codex-Display-Hub/1.1.0").get("results") or []
+                         "K210-Codex-Display-Hub/1.2.0").get("results") or []
     if not results or not finite(results[0].get("latitude")) or not finite(results[0].get("longitude")):
         raise ValueError("找不到这个城市，请检查名称")
-    return results[0]["latitude"], results[0]["longitude"]
+    result = results[0]
+    name = chinese_city_name(result.get("name")) or chinese_city_name(city)
+    if not name:
+        raise ValueError("未找到城市的中文名称，请使用中文城市名")
+    return {"city": name, "latitude": result["latitude"], "longitude": result["longitude"]}
 
 
 def locate_city():
     """Use the network's public IP to estimate the current city."""
-    data = fetch_json("https://ipwho.is/", "K210-Codex-Display-Hub/1.1.0")
+    data = fetch_json("https://ipwho.is/?lang=zh-CN", "K210-Codex-Display-Hub/1.2.0")
     city = data.get("city")
     lat, lon = data.get("latitude"), data.get("longitude")
     if (data.get("success") is False or not isinstance(city, str) or not city.strip()
             or not finite(lat) or not finite(lon) or not -90 <= lat <= 90
             or not -180 <= lon <= 180):
         raise ValueError("自动定位失败，请稍后重试或关闭自动定位")
-    # Obtain the localized city name when the geocoder can resolve it.
-    try:
-        query = urllib.parse.urlencode({"name": city, "count": 1, "language": "zh", "format": "json"})
-        results = fetch_json("https://geocoding-api.open-meteo.com/v1/search?" + query,
-                             "K210-Codex-Display-Hub/1.1.0").get("results") or []
-        if results:
-            city = results[0].get("name") or city
-    except Exception:
-        pass
-    return {"city": city[:16], "latitude": lat, "longitude": lon}
+    name = chinese_city_name(city)
+    if not name:
+        try:
+            name = geocode_city(city)["city"]
+        except Exception:
+            name = "未知城市"
+    return {"city": name, "latitude": lat, "longitude": lon}

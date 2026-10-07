@@ -2101,6 +2101,24 @@
       "offset_y": -1,
       "width": 15,
       "height": 17
+    },
+    "累": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "计": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
+    },
+    "次": {
+      "font": "STHeiti Light.ttc",
+      "offset_y": -1,
+      "width": 15,
+      "height": 17
     }
   },
   "34": {

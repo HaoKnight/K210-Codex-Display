@@ -7,6 +7,7 @@ datas = [
     (str(project / "bridge" / "device_support" / "font.json"), "bridge/device_support"),
     (str(project / "config.example.json"), "."),
     (str(project / "K210" / "CanMV_Preview.py"), "."),
+    (str(project / "K210" / "font.bin"), "."),
     (str(project / "icons" / "menuTemplate.png"), "icons"),
 ]
 
@@ -53,7 +54,7 @@ app = BUNDLE(
     name="K210 Codex Display Hub.app",
     icon=str(project / "icons" / "AppIcon.icns"),
     bundle_identifier="com.knight.k210-codex-display-hub",
-    info_plist={"CFBundleShortVersionString": "1.1.0", "CFBundleVersion": "1.1.0",
+    info_plist={"CFBundleShortVersionString": "1.2.0", "CFBundleVersion": "1.2.0",
                 "CFBundleIconName": "AppIcon",
                 "LSUIElement": True, "NSHighResolutionCapable": True,
                 "NSBluetoothAlwaysUsageDescription": "查找、配对并连接 K210 外接蓝牙串口模块",

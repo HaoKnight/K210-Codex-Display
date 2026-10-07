@@ -48,7 +48,7 @@ class BridgeTests(unittest.TestCase):
         self.assertFalse(self.bridge.config_path.exists())
 
     def test_changed_city_geocodes_once(self):
-        with patch('bridge.app.geocode_city', return_value=(30.27, 120.15)) as geo:
+        with patch('bridge.app.geocode_city', return_value={'city': '杭州', 'latitude': 30.27, 'longitude': 120.15}) as geo:
             self.bridge.save_config({'weather': {'city': '杭州'}})
         geo.assert_called_once_with('杭州')
         self.assertEqual(self.bridge.config['weather']['latitude'], 30.27)
@@ -147,6 +147,15 @@ class BridgeTests(unittest.TestCase):
         self.bridge.link.set_device_ui(page='settings')
         self.bridge.tick(send=False, poll=False)
         self.assertIn('frame', self.bridge.read(frame_version=before))
+
+    def test_settings_preview_indicator_uses_serial_connection(self):
+        self.bridge.link.set_device_ui(page='settings')
+        for connected,color in ((False,(239,68,68)),(True,(22,215,141)),(False,(239,68,68))):
+            info = dict(self.bridge.link.info(),connected=connected)
+            with patch.object(self.bridge.link,'info',return_value=info):
+                self.bridge.tick(send=False,poll=False)
+            dot = next(op for op in self.bridge.read()['frame'] if op[:4]==['circle',313,7,2])
+            self.assertEqual(dot[4],color)
 
     def test_http_frame_protocol_and_legacy_client(self):
         server = ThreadingHTTPServer(('127.0.0.1', 0), handler_for(self.bridge))

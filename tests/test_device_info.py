@@ -73,8 +73,35 @@ class DeviceInfoTests(unittest.TestCase):
         self.assertIsNone(self.info.updated_at)
         self.assertFalse(Path(self.path).exists())
 
+    def test_total_elapsed_survives_power_off_updates_and_clock_sync(self):
+        clock=Clock();clock.host_synced=False
+        self.assertIsNone(self.info.snapshot(clock)['total_elapsed_ms'])
+        self.assertFalse(Path(self.path).exists())
+        clock.host_synced=True
+        self.assertEqual(self.info.snapshot(clock)['total_elapsed_ms'],0)
+        started_at=clock.now()
+        self.info.receive_state({'program_version':ns['PROGRAM_VERSION'],
+                                 'program_updated_at':started_at+10})
+        with patch.dict(ns,PROGRAM_VERSION='v1.2.1'):
+            second=ns['DeviceInfo'](self.path)
+            clock.host_synced=False
+            self.assertIsNone(second.snapshot(clock)['total_elapsed_ms'])
+            clock.host_synced=True;clock.now=lambda:started_at+86400
+            with patch('builtins.open',side_effect=AssertionError('unnecessary flash write')):
+                state=second.snapshot(clock)
+            self.assertEqual(state['total_elapsed_ms'],86400000)
+            self.assertEqual(state['uptime_ms'],0)
+            self.assertIsNone(state['updated_at'])
+        self.assertEqual(json.loads(Path(self.path).read_text())['started_at'],started_at)
+        before=Path(self.path).read_bytes()
+        with patch.object(ns['os'],'rename',side_effect=OSError('power lost')):
+            self.info.receive_state({'program_version':ns['PROGRAM_VERSION'],
+                                     'program_updated_at':started_at+20})
+        self.assertEqual(Path(self.path).read_bytes(),before)
+        self.assertEqual(self.info.updated_at,started_at+10)
+
     def test_native_fonts_cover_info_text(self):
-        for size,chars in [('24','设备信息'),('15','连接已未程序版本启动时间持续运行最近通信秒前收到待同步0123456789vdhms :.-'),('12','最近更新待同步')]:
+        for size,chars in [('24','设备信息'),('15','累计程序版本启动时间本次运行最近通信秒前收到待同步0123456789vdhms :.-'),('12','最近更新待同步')]:
             for ch in chars:self.assertIn(ch, ns['SMOOTH_FONTS'][size])
 
     def test_offline_render_and_long_runtime_fit(self):
@@ -84,8 +111,13 @@ class DeviceInfoTests(unittest.TestCase):
                 self.assertion(x >= 0 and x+self.text_width(value,scale)<=320,(x,value))
         display=Capture(Canvas())
         display.labels=[];display.assertion=self.assertTrue
-        display.render_info({'version':'v1.1.0','uptime_ms':360000000,'rx_age_ms':15000}, online=False)
-        self.assertIn(('未连接',ns['RED']),display.labels)
+        display.render_info({'version':'v1.2.0','uptime_ms':360000000,
+                             'total_elapsed_ms':86400000000,'rx_age_ms':15000}, online=False)
+        self.assertNotIn(('连接',ns['MUTED']),display.labels)
+        self.assertIn(('累计运行',ns['MUTED']),display.labels)
+        self.assertLess(display.labels.index(('本次运行',ns['MUTED'])),
+                        display.labels.index(('累计运行',ns['MUTED'])))
+        self.assertIn(('24000h 00m 00s',ns['WHITE']),display.labels)
         self.assertIn(('15 秒前',ns['MUTED']),display.labels)
 
     def test_heartbeat_does_not_reset_data_age(self):
@@ -123,7 +155,8 @@ class DeviceInfoTests(unittest.TestCase):
         display = Capture(Canvas())
         display.labels = []
         display.render_info({'rx_age_ms': 60000}, online=True)
-        self.assertIn(('已连接', ns['GREEN']), display.labels)
+        self.assertIn(['circle',296,26,3,ns['GREEN'],True], display.c.canvas.ops)
+        self.assertFalse(any(value in ('已连接','未连接') for value,color in display.labels))
         self.assertIn(('60 秒前', ns['BLUE']), display.labels)
 
     def test_brightness_defaults_to_full_and_preserves_saved_choice(self):
@@ -149,10 +182,12 @@ class HostInfoTests(unittest.TestCase):
     def test_host_extrapolates_reported_age_and_uptime(self):
         link=SerialLink('',115200)
         with patch('bridge.serial_link.time.monotonic',return_value=10):
-            link._accept_device_ui({'boot_id':2,'device_info':{'version':'v1.1.0','uptime_ms':4000,'rx_age_ms':0}})
+            link._accept_device_ui({'boot_id':2,'device_info':{'version':'v1.2.0','uptime_ms':4000,
+                                                             'total_elapsed_ms':86400000,'rx_age_ms':0}})
         with patch('bridge.serial_link.time.monotonic',return_value=12):
             info=link.info()['device_info']
         self.assertEqual(info['uptime_ms'],6000)
+        self.assertEqual(info['total_elapsed_ms'],86402000)
         self.assertEqual(info['rx_age_ms'],2000)
         link._accept_device_ui({'boot_id':3})
         self.assertEqual(link.info()['device_info'],{})
@@ -168,7 +203,7 @@ class HostInfoTests(unittest.TestCase):
             bridge.device_touch(25,25)
             self.assertEqual(bridge.link.device_page,'settings')
             bridge.link.device_boot_id=2
-            bridge.link.device_info={'version':'v1.1.0'}
+            bridge.link.device_info={'version':'v1.2.0'}
             bridge.program_update={'status':'success','device_boot_id':2,'updated_at':1790035800}
             bridge.tick(send=False,poll=False)
             self.assertEqual(bridge.read()['packet']['program_updated_at'],1790035800)

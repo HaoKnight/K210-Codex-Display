@@ -94,17 +94,46 @@ h1{font-size:23px;letter-spacing:-.4px}
 .ghost.on{background:#453a24;border-color:var(--amber);color:#f6ce80}
 .primary{background:var(--amber);border-color:var(--amber);color:#211b10}
 input,select{border-radius:3px;border-color:#51585f;background:#1c2024;color:#edf0f2;min-height:36px;font-size:13px}
+select,.city-select{-webkit-appearance:none;appearance:none;padding-right:34px;background-image:linear-gradient(45deg,transparent 43%,#b7bec5 43%,#b7bec5 57%,transparent 57%),linear-gradient(135deg,transparent 43%,#b7bec5 43%,#b7bec5 57%,transparent 57%);background-size:5px 5px;background-position:right 19px center,right 14px center;background-repeat:no-repeat}
+@media(forced-colors:active){select{-webkit-appearance:auto;appearance:auto;background-image:none}}
 input:focus,select:focus{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber)}
 .settings{gap:16px}
 .settings .field,.program-panel>.field{grid-template-columns:1fr;gap:8px}
 .settings .field label::after,.program-panel>.field>label::after{content:none}
 #source-hint{margin:-8px 0 0;color:var(--muted);line-height:1.6}
 .serial-line{grid-template-columns:minmax(0,1fr) auto auto}
-.weather-head{border:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);border-radius:0;background:none;padding:14px 0;min-height:54px}
+.weather-section{grid-column:1/-1;display:grid;gap:12px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.weather-title{font-size:13px;color:var(--muted)}
+.city-picker{position:relative;min-width:0}
+.city-select{display:block;width:100%;min-height:36px;padding:8px 34px 8px 10px;border:1px solid #51585f;border-radius:3px;background-color:#1c2024;color:#edf0f2;font-size:13px;text-align:left;cursor:pointer}
+.city-select:focus-visible{outline:none;border-color:var(--amber);box-shadow:0 0 0 1px var(--amber)}
+.city-select:disabled{color:var(--muted);cursor:not-allowed}
+.city-options{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:30;max-height:300px;overflow:auto;overscroll-behavior:contain;border:1px solid #51585f;border-radius:3px;background:#202428;box-shadow:0 6px 20px #0006}
+.city-options[hidden]{display:none}
+.city-picker.open-up .city-options{top:auto;bottom:calc(100% + 6px)}
+.city-province+ .city-province{border-top:1px solid var(--line)}
+.city-province summary{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;list-style:none;color:#e4e7e9;font-size:13px;font-weight:550;cursor:pointer}
+.city-province summary::-webkit-details-marker{display:none}
+.city-province summary::after{content:"";flex:0 0 5px;width:5px;height:5px;margin-right:4px;border-right:1px solid #b7bec5;border-bottom:1px solid #b7bec5;transform:rotate(-45deg)}
+.city-province[open] summary::after{transform:rotate(45deg)}
+.city-province summary:hover,.city-province summary:focus-visible{background:#292e33}
+.province-cities{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px;padding:4px 6px 8px}
+.city-choice{min-width:0;padding:8px 6px;border:0;border-radius:2px;background:transparent;color:#ced4d9;font-size:12px;line-height:1.4;text-align:left;cursor:pointer}
+.city-choice:hover,.city-choice:focus-visible{background:#363c42;color:#fff}
+.city-choice[aria-pressed="true"]{background:#453a24;color:#f6ce80}
+.weather-head{border:0;border-radius:0;background:none;padding:0;min-height:24px}
 .weather-head .toggle-label{font-size:13px;color:var(--muted)}
 .weather-head .switch{flex-basis:42px;width:42px;height:24px}
 .weather-head .slider:before{width:18px;height:18px;left:3px;top:3px}
 .weather-head .switch input:checked+.slider:before{transform:translateX(18px)}
+.weather-head{cursor:default}
+.weather-head>.toggle-label{flex:1;cursor:pointer}
+.weather-controls{display:flex;align-items:center;gap:10px}
+.location-refresh{display:grid;place-items:center;width:28px;min-height:28px;padding:4px;border:0;background:transparent;color:var(--muted)}
+.location-refresh svg{display:block;width:18px;height:18px}
+.location-refresh[aria-busy="true"] svg{animation:location-spin 1s linear infinite}
+@keyframes location-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.location-refresh[aria-busy="true"] svg{animation:none}}
 .switch input:checked+.slider{background:#a67824}
 .menu-bar-toggle{display:inline-flex;align-items:center;gap:10px;white-space:nowrap;padding:5px 10px}
 .menu-bar-toggle .switch{display:block;flex:0 0 42px}
@@ -144,7 +173,7 @@ pre#packet{margin-top:12px;min-height:0;max-height:none;overflow:visible;white-s
  .program-file-line{grid-template-columns:1fr 1fr}.program-file-line input:first-child{grid-column:1/-1}
 }
 </style>
-<header><div class="brand"><h1>K210 Codex Display Hub</h1><span class="app-version" title="上位机版本">v1.1.0</span></div><div class="head-actions"><label class="ghost menu-bar-toggle" for="cfg-menu-bar"><span>显示菜单栏图标</span><span class="switch"><input id="cfg-menu-bar" type="checkbox" role="switch" checked disabled><span class="slider"></span></span></label><button type="button" class="ghost" id="refresh">刷新</button><button type="button" class="primary" id="sync">立即同步</button></div></header>
+<header><div class="brand"><h1>K210 Codex Display Hub</h1><span class="app-version" title="上位机版本">v1.2.0</span></div><div class="head-actions"><label class="ghost menu-bar-toggle" for="cfg-menu-bar"><span>显示菜单栏图标</span><span class="switch"><input id="cfg-menu-bar" type="checkbox" role="switch" checked disabled><span class="slider"></span></span></label><button type="button" class="ghost" id="refresh">刷新</button><button type="button" class="primary" id="sync">立即同步</button></div></header>
 <div class="offline" id="offline">上位机服务已断开，当前保留最后收到的画面。</div>
 <main class="dashboard">
   <section class="panel preview-panel">
@@ -181,8 +210,15 @@ pre#packet{margin-top:12px;min-height:0;max-height:none;overflow:visible;white-s
         <div class="field full" id="bluetooth-pair-row" hidden><div class="serial-line"><button type="button" class="ghost" id="select-bluetooth">查找附近蓝牙设备</button><button type="button" class="ghost" id="pair-bluetooth">配对新设备</button></div></div>
         <div class="field"><label for="cfg-offset">时区（固定 UTC 偏移）</label><select id="cfg-offset" required aria-describedby="timezone-hint"></select></div>
         <div class="hint" id="timezone-hint">采用固定偏移；标注标准时间的地区不自动切换夏令时。</div>
-        <div class="field full"><label for="cfg-city">天气城市</label><input id="cfg-city" maxlength="16" autocomplete="off" placeholder="例如：天津"></div>
-        <label class="weather-head" for="cfg-weather"><span class="toggle-label">自动获取位置</span><span class="switch"><input id="cfg-weather" type="checkbox"><span class="slider"></span></span></label>
+        <div class="weather-section">
+          <span class="weather-title" id="city-title">城市天气</span>
+          <div class="weather-head"><label class="toggle-label" for="cfg-weather">自动获取位置</label><div class="weather-controls"><button class="ghost location-refresh" id="refresh-location" type="button" aria-label="刷新位置和天气" title="刷新位置和天气" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.4 6.7"/><path d="M20 4v7h-7"/></svg></button><label class="switch" for="cfg-weather"><input id="cfg-weather" type="checkbox" aria-label="自动获取位置"><span class="slider"></span></label></div></div>
+          <div class="city-picker" id="city-picker">
+            <select id="cfg-city" hidden aria-hidden="true" tabindex="-1" disabled><option value="" disabled selected>请选择城市</option></select>
+            <button class="city-select" id="city-picker-toggle" type="button" aria-labelledby="city-title city-picker-value" aria-haspopup="dialog" aria-expanded="false" aria-controls="city-options" disabled><span id="city-picker-value">请选择城市</span></button>
+            <div class="city-options" id="city-options" role="dialog" aria-label="选择城市" hidden></div>
+          </div>
+        </div>
         <div class="form-foot"><span class="save-status" id="save-status" role="status">载入配置中…</span><button class="primary" id="save" type="submit">保存并应用</button></div>
       </form>
     </section>
@@ -221,7 +257,7 @@ function setConnectionStatus(connected){const status=$('connection-status');stat
 function updateConnectionStatus(s){setConnectionStatus(s.serial.connected);if(!connectionPending)return;if(s.serial.connected){$('save-status').textContent='已收到 K210 确认，连接成功';connectionPending=false}else if(s.serial.error){$('save-status').textContent='连接异常：'+s.serial.error;connectionPending=false}else if(s.serial.open){$('save-status').textContent=Date.now()-connectionStartedAt>=15000?'尚未收到 K210 确认，正在重试':'数据通道已打开，等待 K210 确认'}}
 function setFlip(on){flipped=!!on;screen.style.transform=''}
 function applyProgramState(s){const update=s.program_update||{status:'idle',progress:0,message:'尚未更新'},button=$('update-program'),busy=programUpdating||['preparing','uploading','restarting'].includes(update.status),supported=s.serial.device_program_update===1,ready=!!(selectedProgramFile||$('program-path').value.trim());button.disabled=busy||!s.serial.connected||!supported||!ready;button.textContent=update.status==='restarting'?'等待重启…':busy&&update.progress?`更新中 ${update.progress}%`:busy?'正在准备…':'更新 main.py';$('program-progress').textContent=update.status==='failed'?'更新失败':update.status==='success'?'更新成功':update.status==='restarting'?'等待重启':busy?`${update.progress||0}%`:!s.serial.connected?'等待设备':!supported?'需要初始化':'可更新';$('program-status').textContent=['success','restarting','failed'].includes(update.status)?update.message:!s.serial.connected?'连接设备后可更新 main.py':!supported?'请先用 CanMV IDE 写入本次新版 main.py':update.message}
-function apply(s){const p=s.packet;previewPage=s.serial.device_page||'dashboard';if(!configDirty&&$('cfg-weather').checked)$('cfg-city').value=p.city;if(s.frame){lastFrame=s.frame;paint(s.frame);frameVersion=s.frame_version||'';}setFlip(p.flip);applyMenuBarVisibility(s);$('offline').style.display='none';$('mode').textContent=p.demo?'演示模式':`${sourceName[s.source_mode]||s.source_mode} · 实时`;$('time').textContent=new Date().toLocaleTimeString('zh-CN',{hour12:false});$('q5').textContent=percent(p.q5);$('q7').textContent=percent(p.q7);$('task').textContent=p.status==='RUNNING'&&s.activity?.running_count>1?`RUNNING × ${s.activity.running_count}`:p.status;$('task').className=p.status==='DONE'?'green':p.status==='RUNNING'?'blue':p.status==='IDLE'?'muted':'amber';$('temperature').textContent=p.temp==null?'--':`${Math.round(p.temp)} °C · ${p.condition}`;$('serial').textContent=s.serial.connected?'已收到设备确认':s.serial.open?'已打开，等待确认':s.serial.port==='未选择（仅预览）'?'仅网页预览':'等待连接';$('serial').className=s.serial.connected?'green':'amber';$('port').textContent=s.serial.port;activeSerialPort=s.serial.port==='未选择（仅预览）'?'':s.serial.port;serialConnected=!!s.serial.connected;serialOpen=!!s.serial.open;syncConnectButton();updateConnectionStatus(s);$('model').textContent=p.model||'--';$('updated').textContent=date(s.quota_updated_at)+(p.stale?' · 已过期':'');$('weather-at').textContent=date(s.weather_updated_at);$('time-sync').textContent=s.serial.time_sync_at?date(s.serial.time_sync_at):s.serial.open?'等待 K210 确认':'尚未连接';$('packet').textContent=JSON.stringify(p,null,2);$('errors').textContent=s.errors.join('\n');$('errors').classList.toggle('hidden',!s.errors.length);applyProgramState(s);applySyncResults(s.sync)}
+function apply(s){const p=s.packet;previewPage=s.serial.device_page||'dashboard';latestWeatherCity=s.weather_city||p.city;if(!configDirty&&$('cfg-weather').checked)setWeatherCity(latestWeatherCity);if(s.frame){lastFrame=s.frame;paint(s.frame);frameVersion=s.frame_version||'';}setFlip(p.flip);applyMenuBarVisibility(s);$('offline').style.display='none';$('mode').textContent=p.demo?'演示模式':`${sourceName[s.source_mode]||s.source_mode} · 实时`;$('time').textContent=new Date().toLocaleTimeString('zh-CN',{hour12:false});$('q5').textContent=percent(p.q5);$('q7').textContent=percent(p.q7);$('task').textContent=p.status==='RUNNING'&&s.activity?.running_count>1?`RUNNING × ${s.activity.running_count}`:p.status;$('task').className=p.status==='DONE'?'green':p.status==='RUNNING'?'blue':p.status==='IDLE'?'muted':'amber';$('temperature').textContent=p.temp==null?'--':`${Math.round(p.temp)} °C · ${p.condition}`;$('serial').textContent=s.serial.connected?'已收到设备确认':s.serial.open?'已打开，等待确认':s.serial.port==='未选择（仅预览）'?'仅网页预览':'等待连接';$('serial').className=s.serial.connected?'green':'amber';$('port').textContent=s.serial.port;activeSerialPort=s.serial.port==='未选择（仅预览）'?'':s.serial.port;serialConnected=!!s.serial.connected;serialOpen=!!s.serial.open;syncConnectButton();updateConnectionStatus(s);$('model').textContent=p.model||'--';$('updated').textContent=date(s.quota_updated_at)+(p.stale?' · 已过期':'');$('weather-at').textContent=date(s.weather_updated_at);$('time-sync').textContent=s.serial.time_sync_at?date(s.serial.time_sync_at):s.serial.open?'等待 K210 确认':'尚未连接';$('packet').textContent=JSON.stringify(p,null,2);$('errors').textContent=s.errors.join('\n');$('errors').classList.toggle('hidden',!s.errors.length);applyProgramState(s);applySyncResults(s.sync)}
 function applySyncResults(sync){const el=$('sync-results'),details=$('sync-details');details.classList.toggle('hidden',!sync);if(!sync)return;$('sync-summary').textContent=sync.ok?'最近同步：已完成 · 点击查看':'最近同步：部分失败 · 点击查看';if(lastSyncAt!==sync.at){details.open=!sync.ok;lastSyncAt=sync.at;}const names={quota:'额度',weather:'天气',logs:'日志',clock:'校时'};el.textContent=Object.entries(sync.results).map(([key,r])=>`${r.status==='ok'?'✓':r.status==='failed'?'!':'—'} ${names[key]}：${r.message}`).join('\n')}
 async function update(){if(pending||syncing)return;pending=true;try{const r=await fetch('/api/state'+(frameVersion?'?frame_version='+encodeURIComponent(frameVersion):''),{signal:AbortSignal.timeout(5000)});if(!r.ok)throw Error(r.status);apply(await r.json());$('health').textContent='刚刚更新'}catch(e){setConnectionStatus(false);$('offline').style.display='block';$('health').textContent='连接中断'}finally{pending=false}}
 let previewTouching=false;
@@ -233,9 +269,98 @@ function useDefaultProgram(){selectedProgramFile=null;programPathDirty=false;$('
 async function updateProgram(){const button=$('update-program');if(button.disabled||programUpdating)return;programUpdating=true;button.disabled=true;button.textContent='正在准备…';$('program-progress').textContent='0%';$('program-status').textContent='正在检查并上传 main.py…';try{const payload={target:'auto'};if(selectedProgramFile){if(selectedProgramFile.size>512*1024)throw Error('所选文件不能超过 512 KB');payload.content=bytesToBase64(await selectedProgramFile.arrayBuffer());payload.filename=selectedProgramFile.name}else{const path=$('program-path').value.trim();if(!path)throw Error('请先选择或输入主程序文件路径');payload.path=path}const r=await fetch('/api/program-update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(1200000)}),result=await r.json();if(!r.ok||!result.ok)throw Error(result.error||'更新失败');const target=result.result.target,size=(result.result.size/1024).toFixed(1),warning=result.result.online_update_preserved?'':'；该文件不含在线更新模块，后续需用 CanMV IDE 恢复在线更新';$('program-status').textContent=`已写入 ${target} · ${size} KB，等待设备重启确认${warning}`;$('program-progress').textContent='等待重启';$('health').textContent='K210 主程序已写入，正在等待重启确认'}catch(err){$('program-status').textContent='更新失败：'+err.message;$('program-progress').textContent='失败';$('health').textContent='K210 程序更新失败'}finally{programUpdating=false;button.textContent='更新 main.py';setTimeout(update,1500)}}
 async function loadPorts(selected=$('cfg-serial').value){const button=$('reload-ports'),mode=$('cfg-connection').value;button.disabled=true;try{const r=await fetch('/api/ports');if(!r.ok)throw Error(r.status);const ports=(await r.json()).filter(p=>p.kind===mode),select=$('cfg-serial');select.innerHTML='';select.add(new Option('仅网页预览（不连接设备）',''));for(const p of ports){const option=new Option(`${p.description||'串口设备'} · ${p.device}`,p.device);if(p.address){option.dataset.address=p.address;option.dataset.name=(p.description||'蓝牙设备').split(' · ')[0]}select.add(option)}if(mode==='bluetooth'&&pairedDevice&&!ports.some(p=>p.address===pairedDevice.address)){const option=new Option(`${pairedDevice.name} · 已配对，待连接`,'bt:'+pairedDevice.address);option.dataset.address=pairedDevice.address;select.add(option)}const match=Array.from(select.options).find(o=>o.value===selected||pairedDevice&&o.dataset.address===pairedDevice.address&&selected==='bt:'+pairedDevice.address);select.value=match?match.value:'';$('bluetooth-pair-row').style.display=mode==='bluetooth'?'':'none'}catch(e){$('save-status').textContent='设备扫描失败'}finally{button.disabled=false;syncConnectButton()}}
 function sourceChanged(){$('source-hint').textContent=sourceHint[$('cfg-source').value]||''}
-function locationChanged(){$('cfg-city').disabled=$('cfg-weather').checked}
-$('cfg-weather').addEventListener('change',locationChanged);
-async function loadConfig(){try{const r=await fetch('/api/config');if(!r.ok)throw Error(r.status);const c=await r.json();activeSerialPort=c.serial_port;$('cfg-source').value=c.source;$('cfg-connection').value=c.baudrate===9600?'bluetooth':'usb';serialChoiceEdited=false;setTimezone(c.utc_offset_minutes);$('cfg-weather').checked=c.weather.auto_location;$('cfg-menu-bar').checked=c.show_menu_bar_icon!==false;$('cfg-menu-bar').disabled=false;locationChanged();$('cfg-city').value=c.weather.city;await loadPorts(c.serial_port);sourceChanged();syncConnectButton();setFlip(c.flip);$('save-status').textContent='配置已载入';configDirty=false}catch(e){$('save-status').textContent='配置载入失败'}}
+let locationRefreshing=false,cityCatalogReady=false,cityCatalogPromise=null,currentCity='',latestWeatherCity='',selectedCityButton=null;
+const cityButtons=new Map();
+function closeCityPicker(returnFocus=false){
+  $('city-options').hidden=true;$('city-picker-toggle').setAttribute('aria-expanded','false');
+  if(returnFocus&&!$('city-picker-toggle').disabled)$('city-picker-toggle').focus();
+}
+function syncCityPicker(){
+  const select=$('cfg-city'),button=$('city-picker-toggle'),selected=cityButtons.get(select.value);
+  $('city-picker-value').textContent=select.selectedOptions[0]?.textContent||'请选择城市';
+  button.disabled=select.disabled;
+  if(selectedCityButton!==selected){selectedCityButton?.setAttribute('aria-pressed','false');selected?.setAttribute('aria-pressed','true');selectedCityButton=selected}
+  if(button.disabled)closeCityPicker();
+}
+function openCityPicker(){
+  const button=$('city-picker-toggle'),options=$('city-options');
+  if(button.disabled)return;
+  for(const province of options.querySelectorAll('details'))province.open=false;
+  const rect=button.getBoundingClientRect(),below=window.innerHeight-rect.bottom-12,above=rect.top-12,up=below<300&&above>below;
+  $('city-picker').classList.toggle('open-up',up);
+  options.style.maxHeight=Math.max(100,Math.min(300,up?above:below))+'px';
+  options.hidden=false;options.scrollTop=0;button.setAttribute('aria-expanded','true');
+  options.querySelector('summary')?.focus();
+}
+$('city-picker-toggle').onclick=()=>{$('city-options').hidden?openCityPicker():closeCityPicker(true)};
+$('city-picker-toggle').addEventListener('keydown',event=>{if(['ArrowDown','ArrowUp'].includes(event.key)){event.preventDefault();openCityPicker()}});
+$('city-picker').addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();closeCityPicker(true)}});
+document.addEventListener('click',event=>{if(!$('city-picker').contains(event.target))closeCityPicker()});
+document.addEventListener('focusin',event=>{if(!$('city-options').hidden&&!$('city-picker').contains(event.target))closeCityPicker()});
+function setWeatherCity(name){
+  currentCity=name||'';
+  const select=$('cfg-city');
+  select.querySelector('[data-current-location]')?.remove();
+  const shortName=currentCity.replace(/市$/,'');
+  const match=Array.from(select.options).find(o=>o.dataset.city===currentCity||o.dataset.city?.replace(/市$/,'')===shortName);
+  if(match)select.value=match.value;
+  else if(currentCity&&$('cfg-weather').checked){
+    const option=new Option(currentCity,'current-location');
+    option.disabled=true;option.dataset.currentLocation='true';select.add(option,1);select.value=option.value;
+  }else select.value='';
+  syncCityPicker();
+}
+async function loadCities(){
+  if(cityCatalogReady)return;
+  if(cityCatalogPromise)return cityCatalogPromise;
+  cityCatalogPromise=(async()=>{
+    const r=await fetch('/api/cities',{signal:AbortSignal.timeout(5000)});
+    if(!r.ok)throw Error('城市列表载入失败');
+    const catalog=await r.json(),select=$('cfg-city'),options=$('city-options');
+    for(const province of catalog.provinces){
+      const group=document.createElement('optgroup');group.label=province.name;
+      const details=document.createElement('details');details.className='city-province';
+      const summary=document.createElement('summary');summary.textContent=province.name;details.append(summary);
+      const cities=document.createElement('div');cities.className='province-cities';
+      for(const city of province.cities){
+        const option=new Option(city.name,city.code);option.dataset.city=city.name;group.append(option);
+        const button=document.createElement('button');button.type='button';button.className='city-choice';button.textContent=city.name;button.setAttribute('aria-pressed','false');
+        button.onclick=()=>{
+          if($('city-picker-toggle').disabled)return;
+          select.value=city.code;currentCity=city.name;syncCityPicker();
+          select.dispatchEvent(new Event('input',{bubbles:true}));closeCityPicker(true);
+        };
+        cityButtons.set(city.code,button);cities.append(button);
+      }
+      details.append(cities);options.append(details);select.append(group);
+    }
+    cityCatalogReady=true;setWeatherCity(currentCity);locationChanged();
+  })();
+  try{await cityCatalogPromise}finally{cityCatalogPromise=null}
+}
+function locationChanged(){
+  const automatic=$('cfg-weather').checked;
+  $('cfg-city').disabled=automatic||!cityCatalogReady;
+  $('refresh-location').disabled=locationRefreshing||!automatic;
+  if(!automatic){const option=$('cfg-city').querySelector('[data-current-location]');if(option){option.remove();$('cfg-city').value=''}}
+  syncCityPicker();
+}
+$('cfg-weather').addEventListener('change',()=>{if($('cfg-weather').checked)setWeatherCity(latestWeatherCity||currentCity);locationChanged()});
+$('refresh-location').onclick=async()=>{
+  if(locationRefreshing||!$('cfg-weather').checked)return;
+  const button=$('refresh-location');
+  locationRefreshing=true;locationChanged();button.setAttribute('aria-busy','true');
+  $('save-status').textContent='正在刷新位置和天气…';
+  try{
+    const r=await fetch('/api/location-refresh',{method:'POST',signal:AbortSignal.timeout(60000)}),result=await r.json();
+    if(!r.ok||!result.ok)throw Error(result.error||'位置刷新失败');
+    apply(result.state);
+    if($('cfg-weather').checked)setWeatherCity(result.state.weather_city||result.state.packet.city);
+    $('save-status').textContent='位置和天气已刷新'+(configDirty?' · 其他更改尚未保存':'');
+  }catch(err){$('save-status').textContent='位置刷新失败：'+err.message}
+  finally{locationRefreshing=false;button.removeAttribute('aria-busy');locationChanged()}
+};
+async function loadConfig(){try{const r=await fetch('/api/config');if(!r.ok)throw Error(r.status);const c=await r.json();await loadCities();activeSerialPort=c.serial_port;$('cfg-source').value=c.source;$('cfg-connection').value=c.baudrate===9600?'bluetooth':'usb';serialChoiceEdited=false;setTimezone(c.utc_offset_minutes);$('cfg-weather').checked=c.weather.auto_location;$('cfg-menu-bar').checked=c.show_menu_bar_icon!==false;$('cfg-menu-bar').disabled=false;locationChanged();setWeatherCity($('cfg-weather').checked&&latestWeatherCity?latestWeatherCity:c.weather.city);await loadPorts(c.serial_port);sourceChanged();syncConnectButton();setFlip(c.flip);$('save-status').textContent='配置已载入';configDirty=false}catch(e){$('save-status').textContent='配置载入失败'}}
 $('settings').addEventListener('input',e=>{if(e.target.id==='cfg-menu-bar')return;$('save-status').textContent='有未保存的更改';configDirty=true});$('cfg-source').addEventListener('change',sourceChanged);$('cfg-connection').addEventListener('change',()=>{serialChoiceEdited=true;loadPorts('')});$('cfg-serial').addEventListener('change',()=>{serialChoiceEdited=true;syncConnectButton()});$('reload-ports').onclick=()=>loadPorts();async function pickBluetooth(action){const button=$(action==='pair'?'pair-bluetooth':'select-bluetooth');button.disabled=true;$('save-status').textContent=action==='pair'?'正在查找新蓝牙设备，请在弹出的窗口中完成配对…':'正在查找附近的蓝牙设备…';try{const r=await fetch('/api/bluetooth/'+action,{method:'POST',signal:AbortSignal.timeout(330000)}),result=await r.json();if(!r.ok||!result.ok){if(result.cancelled){$('save-status').textContent='已取消选择';return}throw Error(result.error||'蓝牙设备选择失败')}pairedDevice=result.device;await loadPorts('bt:'+pairedDevice.address);$('save-status').textContent=`已选择 ${pairedDevice.name}，点击连接`;syncConnectButton()}catch(err){$('save-status').textContent='蓝牙设备选择失败：'+err.message}finally{button.disabled=false}}$('pair-bluetooth').onclick=()=>pickBluetooth('pair');$('select-bluetooth').onclick=()=>pickBluetooth('select');$('refresh').onclick=()=>window.location.reload();$('sync').onclick=syncNow;$('update-program').onclick=updateProgram;$('choose-program').onclick=()=>$('program-file').click();$('default-program').onclick=useDefaultProgram;$('program-file').onchange=()=>{const file=$('program-file').files[0];if(!file)return;if(!file.name.toLowerCase().endsWith('.py')){$('program-status').textContent='请选择 .py 主程序文件';$('program-file').value='';return}selectedProgramFile=file;programPathDirty=false;$('program-path').value=`已选择文件：${file.name}`;$('program-status').textContent=`已选择 ${file.name} · ${(file.size/1024).toFixed(1)} KB`;update()};$('program-path').addEventListener('input',()=>{selectedProgramFile=null;programPathDirty=true;$('program-file').value='';$('program-status').textContent='将从此路径读取主程序';update()});
 screen.addEventListener('click',touchPreview);
 async function postConfig(payload){const r=await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}),result=await r.json();if(!r.ok)throw Error(result.error||'保存失败');return result}
@@ -260,7 +385,7 @@ $('cfg-menu-bar').addEventListener('change',async()=>{
 });
 async function connectBluetooth(){const address=selectedBluetoothAddress();if(!address)throw Error('请先选择蓝牙设备');const option=$('cfg-serial').selectedOptions[0];pairedDevice={address,name:option.dataset.name||pairedDevice?.name||option.textContent.split(' · ')[0]};const r=await fetch('/api/bluetooth/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address}),signal:AbortSignal.timeout(45000)}),result=await r.json();if(!r.ok||!result.ok)throw Error(result.error||'蓝牙连接失败');activeSerialPort=result.port;connectionPending=true;connectionStartedAt=Date.now();await loadPorts(result.port);return result.port}
 $('connect-port').onclick=async()=>{const button=$('connect-port'),selected=$('cfg-serial').value,disconnect=!!activeSerialPort&&(serialConnected||serialOpen)&&(!selected||selected===activeSerialPort);if(!selected&&!disconnect){$('save-status').textContent='请先选择设备';return}connectionBusy=true;button.disabled=true;$('save-status').textContent=disconnect?'正在断开…':'正在连接…';try{if(disconnect){await postConfig({serial_port:'',baudrate:connectionBaud()});activeSerialPort='';serialConnected=false;serialOpen=false;connectionPending=false;const option=$('cfg-serial').selectedOptions[0];if(option?.dataset.address){pairedDevice={address:option.dataset.address,name:option.dataset.name||pairedDevice?.name||option.textContent.split(' · ')[0]};option.textContent=option.textContent.replace(' · 已连接',' · 待连接')}}else if($('cfg-connection').value==='bluetooth'){await connectBluetooth()}else{await postConfig({serial_port:selected,baudrate:115200});activeSerialPort=selected;connectionPending=true;connectionStartedAt=Date.now()}serialChoiceEdited=false;$('save-status').textContent=disconnect?'已断开，可再次点击连接':'已发起连接，等待 K210 确认';await update()}catch(err){connectionPending=false;$('save-status').textContent=err.message}finally{connectionBusy=false;syncConnectButton()}};
-$('settings').onsubmit=async e=>{e.preventDefault();const button=$('save');button.disabled=true;$('save-status').textContent='正在保存…';try{const mode=$('cfg-connection').value,selected=$('cfg-serial').value;let port=serialChoiceEdited?selected:activeSerialPort;if(mode==='bluetooth'&&selected&&(serialChoiceEdited||selected!==activeSerialPort))port=await connectBluetooth();else if(mode==='bluetooth'&&serialChoiceEdited&&port&&!selected)throw Error('请先选择蓝牙设备');const payload={source:$('cfg-source').value,serial_port:port,baudrate:connectionBaud(),utc_offset_minutes:Number($('cfg-offset').value),weather:{auto_location:$('cfg-weather').checked,...(!$('cfg-weather').checked?{city:$('cfg-city').value.trim()}:{})}};await postConfig(payload);activeSerialPort=port;serialChoiceEdited=false;configDirty=false;syncConnectButton();$('save-status').textContent='设置已保存并生效';await update()}catch(err){$('save-status').textContent=err.message}finally{button.disabled=false}};
+$('settings').onsubmit=async e=>{e.preventDefault();if(!$('cfg-weather').checked&&!cityButtons.has($('cfg-city').value)){$('save-status').textContent='请先选择城市';$('city-picker-toggle').focus();return}const button=$('save');button.disabled=true;$('save-status').textContent='正在保存…';try{const mode=$('cfg-connection').value,selected=$('cfg-serial').value;let port=serialChoiceEdited?selected:activeSerialPort;if(mode==='bluetooth'&&selected&&(serialChoiceEdited||selected!==activeSerialPort))port=await connectBluetooth();else if(mode==='bluetooth'&&serialChoiceEdited&&port&&!selected)throw Error('请先选择蓝牙设备');const payload={source:$('cfg-source').value,serial_port:port,baudrate:connectionBaud(),utc_offset_minutes:Number($('cfg-offset').value),weather:{auto_location:$('cfg-weather').checked,...(!$('cfg-weather').checked?{city_code:$('cfg-city').value}:{})}};await postConfig(payload);activeSerialPort=port;serialChoiceEdited=false;configDirty=false;syncConnectButton();$('save-status').textContent='设置已保存并生效';await update()}catch(err){$('save-status').textContent=err.message}finally{button.disabled=false}};
 let refreshTimer;
 function scheduleRefresh(){clearTimeout(refreshTimer);refreshTimer=setTimeout(async()=>{await update();scheduleRefresh()},document.hidden?10000:500)}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)update();scheduleRefresh()});
