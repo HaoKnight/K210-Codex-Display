@@ -143,6 +143,8 @@ class LogObserver:
                     self.activity.pop(path, None)
                 else:
                     _, pos, pending, dropping = old
+                    if stat.st_size == pos:
+                        continue
                 with path.open("rb") as f:
                     f.seek(pos)
                     if fresh and pos:

@@ -11,7 +11,7 @@ from http.server import ThreadingHTTPServer
 from urllib.request import urlopen
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from bridge.app import Bridge, handler_for, load_config
+from bridge.app import Bridge, Canvas, handler_for, load_config
 from bridge.serial_link import SerialLink
 from bridge.sources import LogObserver, quota_error_message
 from bridge.live_renderer import LiveRenderer
@@ -142,6 +142,32 @@ class BridgeTests(unittest.TestCase):
         self.assertLess(len(json.dumps(cached)), len(json.dumps(first))/20)
         self.assertNotIn('frame', self.bridge.read(include_frame=False))
 
+    def test_background_communication_renders_only_when_preview_requested(self):
+        with patch('bridge.app.time.time', return_value=1790056800), \
+             patch('bridge.app.Canvas', wraps=Canvas) as canvas:
+            bridge = Bridge(self.bridge.config, self.bridge.config_path)
+            with patch.object(bridge.link, 'exchange', side_effect=lambda p, *args: p) as exchange:
+                for _ in range(3):
+                    bridge.tick(poll=False)
+                    self.assertNotIn('frame', bridge.read(include_frame=False))
+                self.assertEqual(exchange.call_count, 3)
+                bridge.sync_now()
+                bridge.reconnect_serial()
+                canvas.assert_not_called()
+                first = bridge.read()
+                self.assertTrue(first['frame'])
+                self.assertEqual(canvas.call_count, 1)
+                bridge.tick(poll=False)
+                self.assertNotIn('frame', bridge.read(frame_version=first['frame_version']))
+                self.assertEqual(canvas.call_count, 1)
+                bridge.link.set_device_ui(page='settings')
+                bridge.tick(poll=False)
+                self.assertIn('frame', bridge.read(frame_version=first['frame_version']))
+                self.assertEqual(canvas.call_count, 2)
+                bridge.tick(poll=False)
+                bridge.read(include_frame=False)
+                self.assertEqual(canvas.call_count, 2)
+
     def test_frame_invalidates_on_page_change(self):
         before = self.bridge.read()['frame_version']
         self.bridge.link.set_device_ui(page='settings')
@@ -163,6 +189,9 @@ class BridgeTests(unittest.TestCase):
         worker.start()
         try:
             url = 'http://127.0.0.1:%d/api/state' % server.server_port
+            with patch.object(self.bridge, '_render_preview', side_effect=AssertionError('hidden preview')):
+                with urlopen(url+'?preview=0') as r: hidden = json.load(r)
+                self.assertNotIn('frame', hidden)
             with urlopen(url) as r: full = json.load(r)
             with urlopen(url+'?frame_version='+full['frame_version']) as r: small = json.load(r)
             self.assertIn('frame', full)

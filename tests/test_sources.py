@@ -1,7 +1,38 @@
+import json
+from pathlib import Path
+import tempfile
 import unittest
 from unittest.mock import MagicMock, patch
 
-from bridge.sources import fetch_json, geocode_city, locate_city
+from bridge.sources import LogObserver, fetch_json, geocode_city, locate_city
+
+
+class LogObserverTests(unittest.TestCase):
+    def test_unchanged_files_stay_closed_and_append_truncation_rotation_are_read(self):
+        def event(status):
+            return json.dumps({'timestamp': '2026-10-08T01:00:00Z',
+                              'type': 'event_msg', 'payload': {'type': status}}) + '\n'
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'sessions' / 'test.jsonl'
+            path.parent.mkdir()
+            observer = LogObserver(tmp)
+            record = event('task_started') + '\n'
+            path.write_text(record[:-5])
+            observer.poll()
+            with patch.object(Path, 'open', side_effect=AssertionError('unchanged file opened')):
+                observer.poll()
+            with path.open('a') as f:
+                f.write(record[-5:])
+            observer.poll()
+            self.assertEqual(observer.activity[path]['status'], 'RUNNING')
+            path.write_text(event('turn_aborted'))
+            observer.poll()
+            self.assertEqual(observer.activity[path]['status'], 'IDLE')
+            replacement = path.with_suffix('.tmp')
+            replacement.write_text(event('task_complete'))
+            replacement.replace(path)
+            observer.poll()
+            self.assertEqual(observer.activity[path]['status'], 'DONE')
 
 
 class FetchJsonTests(unittest.TestCase):

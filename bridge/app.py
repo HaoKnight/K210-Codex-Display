@@ -90,6 +90,9 @@ class Bridge:
         self.demo_started_at = int(time.time())
         self.seq = 0
         self.snapshot = {}
+        self.preview_key = None
+        self.preview_frame = []
+        self.preview_version = None
         self.last_sync = None
         self.threads = []
         self.tick(send=False, poll=False)
@@ -231,7 +234,7 @@ class Bridge:
             self.tick(send=True, poll=False)
             if error:
                 raise RuntimeError(error)
-        return self.read()
+        return self.read(include_frame=False)
 
     def sync_now(self):
         """Force one full refresh: logs, quota, weather, device time, then redraw."""
@@ -281,7 +284,7 @@ class Bridge:
         finally:
             self.sync_lock.release()
         self.apply_device_settings()
-        return self.read()
+        return self.read(include_frame=False)
 
     def apply_device_settings(self):
         """Persist settings reported by the K210 touch UI."""
@@ -366,20 +369,43 @@ class Bridge:
         if send:
             packet = self.link.exchange(packet, c["clock_sync_seconds"])
         link_info = self.link.info()
-        online = link_info["connected"]
         self._confirm_program_update(link_info)
+        with self.lock:
+            self.snapshot = {"packet": packet, "serial": link_info,
+                "weather_city": weather_city,
+                "activity": activity,
+                "quota_source": origin, "quota_updated_at": at or None,
+                "weather_updated_at": weather["at"] or None,
+                "device_page": link_info.get("device_page", "dashboard"),
+                "errors": [e for e in (self.observer.error if not demo else None,
+                    self.remote_error, self.weather_error, self.link.error,
+                    self.device_settings_error) if e],
+                "source_mode": c["source"]}
+
+    def _render_preview(self):
+        """Generate a frame only for a reader requesting the browser preview."""
+        packet, link_info = self.snapshot["packet"], self.snapshot["serial"]
+        online = link_info["connected"]
         device_page = link_info.get("device_page", "dashboard")
         device_flip = link_info.get("device_flip")
         device_brightness = link_info.get("device_brightness", 100)
         render_flip = device_flip if isinstance(device_flip, bool) else packet["flip"]
-        canvas = Canvas()
         display_type = self.renderer.display_type()
+        key = (display_type, {k: v for k, v in packet.items()
+                             if k not in ("seq", "time_sync")},
+               online, device_page, render_flip, device_brightness,
+               link_info.get("device_show_codex", True),
+               link_info.get("device_bluetooth_enabled", False),
+               link_info.get("device_info", {}) if device_page == "info" else None)
+        if key == self.preview_key:
+            return
+        canvas = Canvas()
         if display_type is not None:
             try:
                 device_display = display_type(canvas)
                 if device_page == "info" and hasattr(device_display, "render_info"):
                     device_display.render_info(link_info.get("device_info", {}),
-                                               c["utc_offset_minutes"], online=online)
+                                               packet["offset"], online=online)
                 elif device_page == "settings" and hasattr(device_display, "render_settings"):
                     device_display.render_settings(render_flip, device_brightness,
                                                    touch_ready=True,
@@ -396,24 +422,20 @@ class Bridge:
         else:
             Display(canvas, str(ROOT / "bridge/device_support/font.json")).render(
                 packet, online=online)
-        with self.lock:
-            self.snapshot = {"packet": packet, "frame": canvas.ops, "serial": link_info,
-                "weather_city": weather_city,
-                "frame_version": hashlib.sha256(json.dumps(canvas.ops, separators=(",", ":")).encode()).hexdigest()[:20],
-                "activity": activity,
-                "quota_source": origin, "quota_updated_at": at or None,
-                "weather_updated_at": weather["at"] or None,
-                "device_page": device_page,
-                "errors": [e for e in (self.observer.error if not demo else None,
-                    self.remote_error, self.weather_error, self.link.error,
-                    self.device_settings_error, self.renderer.error) if e],
-                "source_mode": c["source"]}
+        self.preview_frame = canvas.ops
+        self.preview_version = hashlib.sha256(json.dumps(canvas.ops, separators=(",", ":")).encode()).hexdigest()[:20]
+        self.preview_key = key
 
     def read(self, frame_version=None, include_frame=True):
         with self.lock:
-            include_frame = include_frame and frame_version != self.snapshot.get("frame_version")
-            state = copy.deepcopy({key: value for key, value in self.snapshot.items()
-                                   if include_frame or key != "frame"})
+            if include_frame:
+                self._render_preview()
+            state = copy.deepcopy(self.snapshot)
+            state["frame_version"] = self.preview_version
+            if include_frame and frame_version != self.preview_version:
+                state["frame"] = copy.deepcopy(self.preview_frame)
+            if self.renderer.error:
+                state["errors"].append(self.renderer.error)
             state["program_update"] = copy.deepcopy(self.program_update)
             state["sync"] = copy.deepcopy(self.last_sync)
             state["show_menu_bar_icon"] = self.config.get("show_menu_bar_icon", True)
@@ -685,7 +707,7 @@ class Bridge:
             self.link = SerialLink(c["serial_port"], c["baudrate"])
             self._tick(send=True, poll=False)
         self.apply_device_settings()
-        return self.read()
+        return self.read(include_frame=False)
 
     def connect_bluetooth(self, address):
         from .bluetooth_devices import ADDRESS, serial_port_for_device
@@ -734,8 +756,10 @@ def handler_for(bridge):
             parsed = urlsplit(self.path)
             path = parsed.path
             if path == "/api/state":
-                version = parse_qs(parsed.query).get("frame_version", [None])[0]
-                body = json.dumps(bridge.read(frame_version=version), ensure_ascii=False).encode()
+                query = parse_qs(parsed.query)
+                version = query.get("frame_version", [None])[0]
+                preview = query.get("preview", ["1"])[0] != "0"
+                body = json.dumps(bridge.read(frame_version=version, include_frame=preview), ensure_ascii=False).encode()
                 mime = "application/json; charset=utf-8"
             elif path == "/api/config":
                 body = json.dumps(bridge.config_view(), ensure_ascii=False).encode()
@@ -987,8 +1011,7 @@ def main():
         c, config_path = runtime_config(config_path, overrides)
         bridge = Bridge(c, config_path)
         bridge.tick(send=False)
-        state = bridge.read()
-        state.pop("frame")
+        state = bridge.read(include_frame=False)
         print(json.dumps(state, ensure_ascii=False, indent=2))
         return
     bridge, server, url = create_runtime(config_path, overrides)

@@ -202,7 +202,8 @@ def run_channel(address):
                 command = commands.get_nowait()
             except queue.Empty:
                 with objc.autorelease_pool():
-                    run_loop.runUntilDate_(NSDate.dateWithTimeIntervalSinceNow_(0.03))
+                    # ponytail: commands wait at most 100 ms; wake the run loop if lower latency is needed.
+                    run_loop.runUntilDate_(NSDate.dateWithTimeIntervalSinceNow_(0.1))
                 continue
             if command.get("op") == "close":
                 break

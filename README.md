@@ -3,7 +3,7 @@
   <h1>K210 Codex Display Hub</h1>
   <p>在 K210 小屏和本机网页查看 Codex 额度、任务状态、时间与天气。</p>
   <p>
-    <img src="https://img.shields.io/badge/version-1.1.0-2ea44f" alt="版本 1.1.0" />
+    <img src="https://img.shields.io/badge/version-1.2.1-2ea44f" alt="版本 1.2.1" />
     <img src="https://img.shields.io/badge/host-macOS-000000?logo=apple" alt="上位机平台 macOS" />
     <img src="https://img.shields.io/badge/device-K210%20%2F%20CanMV-17A398" alt="K210 和 CanMV" />
   </p>
@@ -76,5 +76,7 @@ P7 是 K210 的 IO7/TX，接 HC-05 的 RX；P6 是 IO6/RX，接 HC-05 的 TX；�
 ## 🔐 数据说明
 
 上位机可读取 `~/.codex` 中的会话日志，或调用本机 `codex app-server` 查询额度。天气使用 Open-Meteo；默认自动定位会请求 `ipwho.is`，由该服务看到公网 IP。网页服务仅监听 `127.0.0.1`，接口没有登录认证，不要将其端口公开。在线更新会改写设备程序，请先确认所选文件。
+
+网页预览按需生成：前台每秒刷新，隐藏时每 10 秒仅获取状态，关闭网页后不再绘制预览。后台继续设备通信、额度查询和天气更新；默认每 5 分钟查询服务额度、每 20 分钟更新天气。
 
 当前仓库尚未配置 Git 远程地址，也没有 `LICENSE` 文件；公开发布前需补充。
