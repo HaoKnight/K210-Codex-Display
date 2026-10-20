@@ -3,7 +3,7 @@
   <h1>K210 Codex Display Hub</h1>
   <p>在 K210 小屏和本机网页查看 Codex 额度、任务状态、时间与天气。</p>
   <p>
-    <img src="https://img.shields.io/badge/version-1.2.1-2ea44f" alt="版本 1.2.1" />
+    <img src="https://img.shields.io/badge/version-1.2.2-2ea44f" alt="版本 1.2.2" />
     <img src="https://img.shields.io/badge/host-macOS-000000?logo=apple" alt="上位机平台 macOS" />
     <img src="https://img.shields.io/badge/device-K210%20%2F%20CanMV-17A398" alt="K210 和 CanMV" />
   </p>
@@ -62,6 +62,8 @@ P7 是 K210 的 IO7/TX，接 HC-05 的 RX；P6 是 IO6/RX，接 HC-05 的 TX；�
 ## ⚙️ 配置与开发
 
 源码运行时，设置保存在项目根目录的 `config.local.json`；打包应用保存在 `~/Library/Application Support/K210 Codex Display Hub/config.json`。配置模板见 `config.example.json`。默认数据来源为本机日志，天气默认自动定位；网页中可改为手动城市。`config.local.json` 已被 Git 忽略。
+
+使用 Codex 服务时，上位机会从 PATH、常见 CLI 安装目录及 `/Applications`、`~/Applications` 中的 ChatGPT/Codex 应用包查找 `codex`。菜单栏启动不继承终端 PATH；若使用其他安装位置，可将配置中的 `codex_bin` 设为可执行文件的绝对路径，然后重启上位机。天气与额度独立查询；天气错误会区分自动定位、城市查询和天气查询，并提示超时、DNS 或 HTTPS 等原因。
 
 测试与 macOS 打包：
 

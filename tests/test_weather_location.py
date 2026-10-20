@@ -61,5 +61,8 @@ class WeatherLocationTests(unittest.TestCase):
                 self.assertEqual(fetch.call_args.args[0]['latitude'],39)
                 self.assertEqual(b.weather['city'],'天津')
             with patch('bridge.app.locate_city',side_effect=ValueError('failed')):
-                self.assertIsNotNone(b.refresh_weather())
+                self.assertIn('自动定位失败', b.refresh_weather())
+                self.assertEqual(b.weather['city'],'天津')
+            with patch('bridge.app.locate_city',return_value={'city':'天津','latitude':39,'longitude':117}),patch('bridge.app.weather_fetch',side_effect=TimeoutError()):
+                self.assertIn('天气查询失败：请求超时', b.refresh_weather())
                 self.assertEqual(b.weather['city'],'天津')

@@ -18,7 +18,7 @@ from .live_renderer import LiveRenderer
 from .serial_link import SerialLink, list_ports
 from .cities import city_catalog, city_location
 from .sources import (LogObserver, chinese_city_name, geocode_city, locate_city, normalize_limits, read_app_server,
-                      weather_fetch, quota_error_message)
+                      weather_fetch, quota_error_message, weather_error_message)
 
 if getattr(sys, "frozen", False):
     ROOT = Path(getattr(sys, "_MEIPASS", Path(sys.executable).resolve().parent))
@@ -201,16 +201,20 @@ class Bridge:
             c = copy.deepcopy(self.config) if config is None else config
         if c["source"] == "demo":
             return None
+        stage = "天气查询"
         try:
             effective = dict(c["weather"])
             if effective.get("auto_location", False):
+                stage = "自动定位"
                 effective.update(locate_city())
             elif not chinese_city_name(effective["city"]):
+                stage = "城市查询"
                 effective.update(geocode_city(effective["city"]))
+            stage = "天气查询"
             weather = weather_fetch(effective)
             weather["city"] = effective["city"]
         except Exception as exc:
-            message = type(exc).__name__ + ": 天气暂不可用"
+            message = weather_error_message(exc, stage)
             with self.lock:
                 if self.config["weather"] == c["weather"] and self.config["source"] == c["source"]:
                     self.weather_error = message

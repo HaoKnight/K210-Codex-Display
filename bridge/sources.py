@@ -6,10 +6,13 @@ import os
 from pathlib import Path
 import queue
 import shutil
+import socket
+import ssl
 import subprocess
 import threading
 import time
 import urllib.parse
+import urllib.error
 import urllib.request
 
 
@@ -202,11 +205,40 @@ def resolve_codex_binary(binary="codex"):
         home / ".codex/packages/standalone/current/bin" / str(binary),
         Path("/opt/homebrew/bin") / str(binary),
         Path("/usr/local/bin") / str(binary),
+        # Finder/LaunchAgent launches do not inherit the desktop app's PATH.
+        Path("/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS") / str(binary),
+        home / "Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS" / str(binary),
+        Path("/Applications/Codex.app/Contents/Resources") / str(binary),
+        home / "Applications/Codex.app/Contents/Resources" / str(binary),
     )
     for candidate in candidates:
         if candidate.is_file() and os.access(candidate, os.X_OK):
             return str(candidate.resolve())
     raise FileNotFoundError("Codex executable not found in standard locations")
+
+
+def weather_error_message(exc, stage="天气查询"):
+    """Describe network failures without exposing URLs or proxy credentials."""
+    reason = exc.reason if isinstance(exc, urllib.error.URLError) else exc
+    if isinstance(exc, urllib.error.HTTPError):
+        detail = "服务返回 HTTP %s，请稍后重试" % exc.code
+    elif isinstance(reason, ssl.SSLCertVerificationError):
+        detail = "HTTPS 证书验证失败，请检查系统时间和证书"
+    elif isinstance(reason, ssl.SSLError):
+        detail = "HTTPS 连接失败，请检查网络后重试"
+    elif isinstance(reason, TimeoutError):
+        detail = "请求超时，请检查网络后重试"
+    elif isinstance(reason, socket.gaierror):
+        detail = "域名解析失败，请检查 DNS 和网络"
+    elif isinstance(reason, ConnectionRefusedError):
+        detail = "连接被拒绝，请检查网络后重试"
+    elif isinstance(exc, (urllib.error.URLError, OSError)):
+        detail = "无法连接服务，请检查网络后重试"
+    elif isinstance(exc, (ValueError, KeyError, TypeError)):
+        detail = "服务数据无效，请稍后重试或手动选择城市"
+    else:
+        detail = "服务暂不可用，请稍后重试"
+    return stage + "失败：" + detail
 
 
 def read_app_server(binary, home, timeout=20):

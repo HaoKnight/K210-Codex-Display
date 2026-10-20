@@ -54,7 +54,7 @@ app = BUNDLE(
     name="K210 Codex Display Hub.app",
     icon=str(project / "icons" / "AppIcon.icns"),
     bundle_identifier="com.knight.k210-codex-display-hub",
-    info_plist={"CFBundleShortVersionString": "1.2.1", "CFBundleVersion": "1.2.1",
+    info_plist={"CFBundleShortVersionString": "1.2.2", "CFBundleVersion": "1.2.2",
                 "CFBundleIconName": "AppIcon",
                 "LSUIElement": True, "NSHighResolutionCapable": True,
                 "NSBluetoothAlwaysUsageDescription": "查找、配对并连接 K210 外接蓝牙串口模块",

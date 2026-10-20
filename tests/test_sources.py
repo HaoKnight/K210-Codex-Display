@@ -1,10 +1,65 @@
 import json
 from pathlib import Path
+import socket
+import ssl
 import tempfile
 import unittest
+from urllib.error import HTTPError, URLError
 from unittest.mock import MagicMock, patch
 
-from bridge.sources import LogObserver, fetch_json, geocode_city, locate_city
+from bridge.sources import (LogObserver, fetch_json, geocode_city, locate_city,
+                            resolve_codex_binary, weather_error_message)
+
+
+class CodexBinaryTests(unittest.TestCase):
+    def test_desktop_app_is_found_without_a_terminal_path(self):
+        for relative in (
+            'Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex',
+            'Applications/Codex.app/Contents/Resources/codex',
+        ):
+            with self.subTest(relative=relative), tempfile.TemporaryDirectory() as tmp:
+                binary = Path(tmp) / relative
+                binary.parent.mkdir(parents=True)
+                binary.write_text('#!/bin/sh\n')
+                binary.chmod(0o755)
+                with patch('bridge.sources.shutil.which', return_value=None), \
+                        patch('bridge.sources.Path.home', return_value=Path(tmp)), \
+                        patch.object(Path, 'is_file', autospec=True,
+                                     side_effect=lambda p: p == binary):
+                    self.assertEqual(resolve_codex_binary(), str(binary.resolve()))
+
+    def test_path_binary_wins_and_explicit_missing_path_does_not_fall_back(self):
+        with patch('bridge.sources.shutil.which', return_value='/custom/bin/codex'):
+            self.assertEqual(resolve_codex_binary(), '/custom/bin/codex')
+            with patch.object(Path, 'is_file', return_value=False), self.assertRaises(FileNotFoundError):
+                resolve_codex_binary('/missing/codex')
+
+    def test_discovery_rejects_non_executable_files(self):
+        with patch('bridge.sources.shutil.which', return_value=None), \
+                patch.object(Path, 'is_file', return_value=True), \
+                patch('bridge.sources.os.access', return_value=False), \
+                self.assertRaises(FileNotFoundError):
+            resolve_codex_binary()
+
+
+class WeatherErrorTests(unittest.TestCase):
+    def test_errors_explain_network_failure_without_exposing_raw_details(self):
+        cases = (
+            (URLError(TimeoutError('SECRET')), '超时'),
+            (URLError(socket.gaierror(-2, 'SECRET')), '域名解析'),
+            (URLError(ssl.SSLCertVerificationError(1, 'SECRET')), '证书验证'),
+            (URLError(ssl.SSLError(1, 'SECRET')), 'HTTPS 连接'),
+            (URLError(ConnectionRefusedError('SECRET')), '连接被拒绝'),
+            (URLError('SECRET'), '无法连接'),
+            (HTTPError('https://SECRET', 503, 'SECRET', {}, None), 'HTTP 503'),
+            (ValueError('SECRET'), '服务数据无效'),
+        )
+        for error, expected in cases:
+            with self.subTest(error=error):
+                message = weather_error_message(error, '自动定位')
+                self.assertTrue(message.startswith('自动定位失败：'))
+                self.assertIn(expected, message)
+                self.assertNotIn('SECRET', message)
 
 
 class LogObserverTests(unittest.TestCase):
