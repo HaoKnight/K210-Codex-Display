@@ -20,6 +20,8 @@ RESET_GLYPHS = {
     '15': '发卡重置确认待定时段状态公开放预告来源消息检查尚未abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-._/',
     '18': '重置信息暂无有效消息卡即将发放已确认额度预计记录最近时间未确定日期截止大约状态由源提供等待公布仅，具体距开始小时分进入正在生0123456789/-',
     '20': '重置信息暂无有效消息卡即将发放已确认额度预计Codex 正在执行更新·请勿断电！',
+    '21': '重置卡即将发放已确认额度预计记录最近时间未确定日期截止大约状态由消息源提供等待公布仅，具体距开始小时分进入正在生暂无有效Codex 0123456789/:-?',
+    '25': '公开确认发放预告重置暂无消息?',
 }
 
 
@@ -32,16 +34,26 @@ def generate():
         for char in sorted(city_chars):
             manifest[size][char] = manifest[size]['天']
     for size, characters in RESET_GLYPHS.items():
+        entries = manifest.setdefault(size, {})
         template = (dict(manifest['18']['设'], width=20, height=22) if size == '20'
-                    else manifest[size]['天' if size == '12' else '设'])
+                    else entries.get('天' if size == '12' else '设', manifest['18']['设']))
         for char in characters:
             spec = template
-            if size in ('15', '20') and (char.isascii() or char == '·'):
+            if size in ('21', '25'):
+                name = 'Arial Narrow Bold.ttf' if char.isascii() else 'STHeiti Medium.ttc'
+                path = FONT_DIR / ('Supplemental/' + name if char.isascii() else name)
+                index = 0 if char.isascii() else 1
+                font = ImageFont.truetype(str(path), int(size), index=index)
+                # Align Latin glyph bottoms with Chinese text, keeping punctuation on that baseline.
+                spec = dict(font=name, index=index,
+                            offset_y=int(size) - 1 - font.getbbox('0' if char.isascii() else '国')[3],
+                            width=max(1, math.ceil(font.getlength(char))), height=int(size) + 2)
+            elif size in ('15', '20') and (char.isascii() or char == '·'):
                 name = 'Arial.ttf' if size == '15' else 'Arial Bold.ttf'
                 font = ImageFont.truetype(str(FONT_DIR / 'Supplemental' / name), int(size))
                 spec = dict(font=name, offset_y=-1,
                             width=max(1, math.ceil(font.getlength(char))), height=int(size) + 2)
-            manifest[size].setdefault(char, spec)
+            entries.setdefault(char, spec)
     tables = {}
     for size, entries in manifest.items():
         tables[size] = {}
@@ -49,7 +61,7 @@ def generate():
             path = FONT_DIR / spec['font']
             if not path.exists():
                 path = FONT_DIR / 'Supplemental' / spec['font']
-            font = ImageFont.truetype(str(path), int(size), index=0)
+            font = ImageFont.truetype(str(path), int(size), index=spec.get('index', 0))
             width, height = spec['width'], spec['height']
             bitmap = Image.new('L', (width, height))
             ImageDraw.Draw(bitmap).text((0, spec['offset_y']), char,
@@ -73,8 +85,10 @@ def main():
                             for city in province['cities']))
     banks, font_data = [], bytearray()
     for size, entries in tables.items():
-        # New UI glyphs stay inline so existing devices need only main.py updated.
-        inline = set(RESET_GLYPHS.get(size, '')) - set(manifest[size])
+        # Small additions stay inline; full detail fonts must not crowd the 512 KB startup heap.
+        inline = set(RESET_GLYPHS.get(size, '')) - set(manifest.get(size, {}))
+        if size in ('21', '25'):
+            inline.clear()
         if size == '15':
             # Existing city glyphs must keep their original font.bin offsets.
             inline.difference_update(city_chars)

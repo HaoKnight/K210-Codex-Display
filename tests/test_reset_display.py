@@ -140,19 +140,19 @@ class ResetDisplayTests(unittest.TestCase):
             labels.clear()
             display.render_reset(p)
             centered = [row for row in labels if 64 <= row[1] < 208]
-            self.assertEqual(len(centered), 4 if reset else 1)
+            self.assertEqual(len(centered), 3 if reset else 1)
             for x, y, value, scale in centered:
                 width = display.text_width(value, scale)
                 self.assertLessEqual(abs(x + width / 2 - 160), 0.5)
-                self.assertGreaterEqual(x, 24)
-                self.assertLessEqual(x + width, 296)
+                self.assertGreaterEqual(x, 16)
+                self.assertLessEqual(x + width, 304)
             footer = [value for x, y, value, scale in labels if y >= 208]
             self.assertEqual(len(footer), 2)
             self.assertEqual(footer[0], "来源 AIhot 公开消息")
             self.assertNotIn("AIhot", [value for x, y, value, scale in labels if y < 52])
             if reset is None:
                 self.assertEqual(centered[0][1],
-                                 display.centered_text_y(centered[0][2], 136, 20 / 12))
+                                 display.centered_text_y(centered[0][2], 136, 21 / 12))
 
     def test_detail_fonts_are_larger_and_all_time_formats_fit(self):
         labels = []
@@ -179,14 +179,54 @@ class ResetDisplayTests(unittest.TestCase):
                         self.assertGreaterEqual(y, previous_bottom)
                         previous_bottom = y + max(bank[char][1] for char in value)
                         self.assertLessEqual(previous_bottom, 208)
-                        self.assertGreaterEqual(x, 24)
-                        self.assertLessEqual(x + display.text_width(value, scale), 296)
+                        self.assertGreaterEqual(x, 16)
+                        self.assertLessEqual(x + display.text_width(value, scale), 304)
                     body = [row for row in labels if 120 <= row[1] < 208]
-                    self.assertEqual([row[4] for row in body], [1.5, 1.5])
-                    self.assertTrue(all(row[3] == ns["WHITE"] for row in body))
+                    self.assertEqual([row[4] for row in body], [21 / 12, 21 / 12])
+                    self.assertTrue(all(row[3] == ns["GREEN" if status == "confirmed" else "AMBER"] for row in body))
                     footer = [row for row in labels if row[1] >= 208]
                     self.assertEqual([row[4] for row in footer], [1.25, 1.25])
                     self.assertLessEqual(footer[0][0] + display.text_width(footer[0][2], 1.25), footer[1][0])
+
+    def test_status_is_the_largest_heading_and_repaints_when_message_changes(self):
+        labels = []
+        class Capture(ns["EmbeddedDisplay"]):
+            def text(self, x, y, value, color=ns["WHITE"], scale=1, **kwargs):
+                labels.append((x, y, value, color, scale))
+                return super().text(x, y, value, color, scale=scale, **kwargs)
+        p = packet(); canvas = Canvas(); display = Capture(canvas)
+        for changes, heading, color in (({}, "发放预告", ns["AMBER"]),
+                ({"type": "direct_reset"}, "重置预告", ns["AMBER"]),
+                ({"status": "confirmed", "confirmed_at": NOW}, "公开确认", ns["GREEN"]),
+                ({"stale": True}, "公开确认", ns["MUTED"]),
+                ({"expires_at": NOW - 1}, "暂无消息", ns["MUTED"])):
+            p["reset"].update(changes)
+            labels.clear(); display.render_reset(p, NOW, live=True)
+            header = next(row for row in labels if row[1] < 52)
+            self.assertEqual(header[2:5], (heading, color, 25 / 12))
+            self.assertGreater(header[4], max(row[4] for row in labels if row[1] >= 64))
+            self.assertNotIn("重置信息", [row[2] for row in labels])
+            self.assertEqual(sum(row[2] == heading for row in labels), 1)
+            expected = Canvas(); ns["EmbeddedDisplay"](expected).render_reset(p, NOW)
+            self.assertEqual(canvas.image.tobytes(), expected.image.tobytes())
+
+    def test_detail_digits_align_and_fonts_append_without_adding_startup_strings(self):
+        bank = ns["SMOOTH_FONTS"]["21"]
+        bottoms = []
+        for char in "确认录0123456789":
+            width, height, pixels = bank[char]
+            bottoms.append(max(row for row in range(height) if any(
+                (pixels[(row * width + col) // 4] >> (((row * width + col) % 4) * 2)) & 3
+                for col in range(width))))
+        self.assertLessEqual(max(bottoms) - min(bottoms), 1)
+        for size in ("21", "25"):
+            self.assertFalse(ns["SMOOTH_FONTS"][size].extra)
+            self.assertTrue(ns["SMOOTH_FONTS"][size].characters)
+        banks = ns["SMOOTH_FONTS"]
+        old_end = max(font._offset(len(font.characters)) for size, font in banks.items()
+                      if size not in ("21", "25"))
+        self.assertEqual(banks["21"]._offset(0), old_end)
+        self.assertEqual(banks["25"]._offset(0), banks["21"]._offset(len(banks["21"].characters)))
 
     def test_new_labels_have_glyphs_and_badges_fit_the_model_slot(self):
         class Capture(ns["EmbeddedDisplay"]):
