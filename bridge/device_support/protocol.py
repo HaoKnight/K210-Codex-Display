@@ -32,6 +32,32 @@ def number(value):
     return isinstance(value, (int, float)) and not isinstance(value, bool) and value == value
 
 
+def valid_reset_key(value):
+    return isinstance(value, str) and (value == "" or len(value) == 32
+                                      and all(ch in "0123456789abcdef" for ch in value))
+
+
+def valid_reset(reset):
+    if reset is None:
+        return True
+    if (not isinstance(reset, dict) or reset.get("type") not in ("reset_credit", "direct_reset")
+            or reset.get("status") not in ("announced", "confirmed")
+            or reset.get("precision") not in (None, "exact", "approximate", "deadline", "date", "window")
+            or not isinstance(reset.get("stale"), bool)
+            or not valid_reset_key(reset.get("key", ""))
+            or not isinstance(reset.get("seen", False), bool)):
+        return False
+    for key in ("from", "through", "confirmed_at", "checked_at", "expires_at"):
+        value = reset.get(key)
+        if value is not None and (type(value) is not int or not 0 < value <= 9999999999):
+            return False
+    if reset.get("expires_at") is None:
+        return False
+    start, end = reset.get("from"), reset.get("through")
+    return (start is None and end is None and reset.get("precision") is None
+            or start is not None and end is not None and start <= end and reset.get("precision") is not None)
+
+
 def decode(line):
     try:
         p = json.loads(line.decode("utf-8"))
@@ -63,6 +89,6 @@ def decode(line):
         for key in ("stale", "weather_stale", "demo"):
             if not isinstance(p.get(key), bool):
                 return None
-        return p
+        return p if valid_reset(p.get("reset")) else None
     except (ValueError, TypeError, UnicodeError, KeyError):
         return None

@@ -1,10 +1,12 @@
 """Read only the metadata needed for the display; never expose conversation text."""
 import datetime as dt
+import heapq
 import json
 import math
 import os
 from pathlib import Path
 import queue
+import re
 import shutil
 import socket
 import ssl
@@ -14,6 +16,11 @@ import time
 import urllib.parse
 import urllib.error
 import urllib.request
+
+
+_LOG_HEADER = re.compile(
+    rb'^\s*\{\s*(?:"timestamp"\s*:\s*"[^"]*"\s*,\s*)?'
+    rb'"type"\s*:\s*"([^"]+)"')
 
 
 def timestamp(value):
@@ -79,8 +86,8 @@ def quota_error_message(exc):
 class LogObserver:
     """Discover periodically; tail bounded bytes and preserve incomplete lines.
 
-    First scan takes the last 512 KiB of each of 64 most recently modified files.
-    Status is a heuristic for the most recently active observed session only.
+    Tail 64 recent files; recover lifecycle/model metadata before a bounded tail.
+    Internal review sessions do not represent a user's running task.
     """
     def __init__(self, home, limit_id="codex"):
         self.home = Path(home).expanduser()
@@ -91,6 +98,7 @@ class LogObserver:
         self.quota = None
         self.quota_at = 0
         self.activity = {}
+        self.ignored_activity = set()
         self.error = None
 
     def consume(self, e, key):
@@ -104,6 +112,12 @@ class LogObserver:
             q = normalize_limits(p.get("rate_limits"), self.limit_id)
             if q is not None and at > self.quota_at:
                 self.quota, self.quota_at = q, at
+        if key in self.ignored_activity:
+            return
+        if e.get("type") == "turn_context" and p.get("model") == "codex-auto-review":
+            self.ignored_activity.add(key)
+            self.activity.pop(key, None)
+            return
         a = self.activity.setdefault(key, {"at": 0, "status": "UNKNOWN", "model": "--"})
         if at < a["at"]:
             return
@@ -111,31 +125,86 @@ class LogObserver:
             model = p.get("model")
             if isinstance(model, str):
                 a["model"] = model[:48]
+            if a["status"] == "UNKNOWN":
+                a.update(at=at, status="RUNNING", turn_id=p.get("turn_id"))
         if e.get("type") == "event_msg":
             typ = p.get("type")
             statuses = {"task_started": "RUNNING", "task_complete": "DONE",
                         "turn_aborted": "IDLE"}
             if typ in statuses:
+                turn_id = p.get("turn_id")
+                if (typ != "task_started" and turn_id and a.get("turn_id")
+                        and turn_id != a["turn_id"]):
+                    return
                 a.update(at=at, status=statuses[typ])
-            elif typ in ("token_count", "item_completed") and a["status"] == "RUNNING":
-                a["at"] = at
+                if typ == "task_started":
+                    a["turn_id"] = turn_id
+            elif typ in ("token_count", "item_completed"):
+                if p.get("turn_id") and a.get("turn_id") and p["turn_id"] != a["turn_id"]:
+                    return
+                if a["status"] in ("UNKNOWN", "RUNNING"):
+                    a.update(at=at, status="RUNNING")
+
+    def restore_activity(self, stream, key, end):
+        # Walk backwards without loading conversation bodies or oversized lines.
+        events, pending = [], b""
+        context = started = False
+        dropping = True  # Ignore the unfinished record at EOF (or its empty line).
+        while end and not (context and started):
+            begin = max(0, end - 65536)
+            stream.seek(begin)
+            lines = (stream.read(end - begin) + pending).split(b"\n")
+            end = begin
+            if dropping:
+                if len(lines) == 1:
+                    pending = b""
+                    continue
+                lines.pop()
+                dropping = False
+            pending = lines.pop(0) if begin else b""
+            if len(pending) > 524288:
+                pending, dropping = b"", True
+            for line in reversed(lines):
+                if len(line) > 524288 or not (b'"turn_context"' in line[:160]
+                                              or b'"event_msg"' in line[:160]):
+                    continue
+                try:
+                    event = json.loads(line)
+                except (ValueError, UnicodeError):
+                    continue
+                if not isinstance(event, dict):
+                    continue
+                payload = event.get("payload")
+                if not isinstance(payload, dict):
+                    continue
+                is_context = event.get("type") == "turn_context"
+                typ = payload.get("type")
+                if is_context or typ in ("task_started", "task_complete", "turn_aborted"):
+                    events.append(event)
+                    context |= is_context
+                    started |= typ == "task_started"
+                    if context and started:
+                        break
+        for event in reversed(events):
+            self.consume(event, key)
 
     def poll(self):
         self.error = None
         now = time.monotonic()
         if now >= self.next_scan:
-            candidates = []
-            for directory in ("sessions", "archived_sessions"):
-                for path in (self.home / directory).rglob("*.jsonl"):
-                    try:
-                        candidates.append((path.stat().st_mtime, path))
-                    except OSError:
-                        pass
-            self.paths = [p for _, p in sorted(candidates, reverse=True)[:64]]
+            def candidates():
+                for directory in ("sessions", "archived_sessions"):
+                    for path in (self.home / directory).rglob("*.jsonl"):
+                        try:
+                            yield path.stat().st_mtime, path
+                        except OSError:
+                            pass
+            self.paths = [p for _, p in heapq.nlargest(64, candidates())]
             keep = set(self.paths)
             self.files = {k: v for k, v in self.files.items() if k in keep}
             self.activity = {k: v for k, v in self.activity.items() if k in keep}
-            self.next_scan = now + 30
+            self.ignored_activity.intersection_update(keep)
+            self.next_scan = now + 5
         for path in self.paths:
             try:
                 stat = path.stat()
@@ -149,6 +218,21 @@ class LogObserver:
                     if stat.st_size == pos:
                         continue
                 with path.open("rb") as f:
+                    if fresh:
+                        self.ignored_activity.discard(path)
+                        try:
+                            meta = json.loads(f.readline(524289))
+                        except (ValueError, UnicodeError):
+                            meta = {}
+                        if not isinstance(meta, dict):
+                            meta = {}
+                        payload = meta.get("payload")
+                        source = payload.get("source") if isinstance(payload, dict) else None
+                        if (meta.get("type") == "session_meta" and isinstance(source, dict)
+                                and "subagent" in source):
+                            self.ignored_activity.add(path)
+                        else:
+                            self.restore_activity(f, path, stat.st_size)
                     f.seek(pos)
                     if fresh and pos:
                         f.readline()  # initial seek can be in the middle of a record
@@ -161,6 +245,9 @@ class LogObserver:
                         dropping = False
                         continue
                     if len(line) > 524288:
+                        continue
+                    header = _LOG_HEADER.match(line)
+                    if header and header[1] not in (b"turn_context", b"event_msg"):
                         continue
                     try:
                         self.consume(json.loads(line), path)

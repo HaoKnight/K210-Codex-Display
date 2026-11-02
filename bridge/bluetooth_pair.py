@@ -8,9 +8,11 @@ def run_pairing_panel(action="pair"):
     from AppKit import NSApplication, NSApplicationActivationPolicyRegular
 
     objc.loadBundle("IOBluetooth", globals(),
-                    bundle_path="/System/Library/Frameworks/IOBluetooth.framework")
+                    bundle_path="/System/Library/Frameworks/IOBluetooth.framework",
+                    scan_classes=False)
     objc.loadBundle("IOBluetoothUI", globals(),
-                    bundle_path="/System/Library/Frameworks/IOBluetoothUI.framework")
+                    bundle_path="/System/Library/Frameworks/IOBluetoothUI.framework",
+                    scan_classes=False)
     application = NSApplication.sharedApplication()
     application.setActivationPolicy_(NSApplicationActivationPolicyRegular)
     if action == "pair":

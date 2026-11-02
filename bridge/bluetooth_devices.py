@@ -17,7 +17,8 @@ def _device_class():
         raise RuntimeError("蓝牙设备连接目前仅支持 macOS")
     import objc
     objc.loadBundle("IOBluetooth", globals(),
-                    bundle_path="/System/Library/Frameworks/IOBluetooth.framework")
+                    bundle_path="/System/Library/Frameworks/IOBluetooth.framework",
+                    scan_classes=False)
     return objc.lookUpClass("IOBluetoothDevice")
 
 

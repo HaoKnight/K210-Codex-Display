@@ -1,6 +1,6 @@
 """Incremental frames must match full frames, including digit erasure."""
 import unittest
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter
 from test_device_info import ns
 
 class Canvas:
@@ -8,6 +8,16 @@ class Canvas:
         self.image = Image.new('RGB', (320, 240))
         self.draw = ImageDraw.Draw(self.image)
         self.calls = 0
+        self.filters = []
+    def mean(self, size):
+        self.filters.append(('mean', size))
+        self.image = self.image.filter(ImageFilter.BoxBlur(size))
+        self.draw = ImageDraw.Draw(self.image)
+    def blend(self, color, alpha=128):
+        self.filters.append(('blend', color, alpha))
+        self.image = Image.blend(Image.new('RGB', self.image.size, color),
+                                 self.image, alpha / 256)
+        self.draw = ImageDraw.Draw(self.image)
     def draw_rectangle(self, x, y, w, h, color, fill=False):
         self.calls += 1
         self.draw.rectangle((x,y,x+w-1,y+h-1), fill=color if fill else None,
@@ -21,6 +31,50 @@ class Canvas:
                           outline=None if fill else color)
 
 class RefreshTests(unittest.TestCase):
+    def test_device_update_progress_uses_local_incremental_drawing_and_restores_home(self):
+        canvas = Canvas(); display = ns['EmbeddedDisplay'](canvas)
+        for char in '正在执行更新·请勿断电！':
+            self.assertIn(char, ns['SMOOTH_FONTS']['20'])
+        display.render_program_update(0)
+        header = canvas.image.crop((0, 0, 320, 132)).tobytes()
+        for percent in (1, 9, 37, 75, 99, 100):
+            canvas.calls = 0
+            display.render_program_update(percent)
+            self.assertLess(canvas.calls, 250)
+            self.assertEqual(canvas.image.crop((0, 0, 320, 132)).tobytes(), header)
+            reference = Canvas(); ns['EmbeddedDisplay'](reference).render_program_update(percent, live=False)
+            self.assertEqual(canvas.image.tobytes(), reference.image.tobytes())
+            canvas.calls = 0; display.render_program_update(percent)
+            self.assertEqual(canvas.calls, 0)
+        packet = self.packet(True)
+        display.render_live(packet, packet['ts'])
+        reference = Canvas(); ns['EmbeddedDisplay'](reference).render(packet, packet['ts'])
+        self.assertEqual(canvas.image.tobytes(), reference.image.tobytes())
+
+    def test_update_frosts_the_current_screen_once_and_handles_missing_filters(self):
+        from unittest.mock import patch
+        canvas = Canvas(); display = ns['EmbeddedDisplay'](canvas)
+        packet = self.packet(True)
+        display.render_live(packet, packet['ts'])
+        before = canvas.image.crop((0, 0, 320, 48)).tobytes()
+        display.render_program_update(0)
+        blurred = canvas.image.crop((0, 0, 320, 48)).tobytes()
+        self.assertNotEqual(before, blurred)
+        self.assertEqual(canvas.filters, [('mean', 5), ('mean', 5),
+                                         ('blend', ns['BG'], 64)])
+        for percent in (1, 47, 99, 100):
+            display.render_program_update(percent)
+            self.assertEqual(canvas.image.crop((0, 0, 320, 48)).tobytes(), blurred)
+        self.assertEqual(len(canvas.filters), 3)
+        display.render_live(packet, packet['ts'])
+        reference = Canvas(); ns['EmbeddedDisplay'](reference).render(packet, packet['ts'])
+        self.assertEqual(canvas.image.tobytes(), reference.image.tobytes())
+        for error in (AttributeError('older firmware'), MemoryError('no filter buffer')):
+            with patch.object(canvas, 'mean', side_effect=error):
+                display.render_program_update(47)
+                self.assertEqual(canvas.image.getpixel((0, 0)), ns['BG'])
+            display.render_live(packet, packet['ts'])
+
     def test_preview_reloads_when_only_the_font_file_changes(self):
         from pathlib import Path
         import tempfile
@@ -43,12 +97,13 @@ class RefreshTests(unittest.TestCase):
         import base64
         from pathlib import Path
         self.assertLess((Path(__file__).resolve().parents[1] / 'K210/main.py').stat().st_size,
-                        100 * 1024)
+                        112 * 1024)
         decoded_bytes = 0
         for bank in ns['SMOOTH_FONTS'].values():
-            font = ns['NativeFont'](bank.characters, base64.b64encode(bank.offsets), bank.path)
+            font = ns['NativeFont'](bank.characters, base64.b64encode(bank.offsets), bank.path,
+                                    extra=bank.extra)
             self.assertFalse(font.cache)
-            for char in font.characters:
+            for char in font.characters + ''.join(font.extra):
                 font[char]
                 self.assertLessEqual(len(font.cache), 48)
             decoded_bytes += sum(len(glyph[2]) for glyph in font.cache.values())
@@ -84,6 +139,40 @@ class RefreshTests(unittest.TestCase):
                     temp=28, weather_stale=False, show_codex=mode, q5=55,
                     q7=18, r5=1790056863, r7=None, stale=False,
                     status='IDLE', model='test')
+
+    def test_long_model_scrolls_to_both_ends_without_overwriting_status(self):
+        p = dict(self.packet(True), model='gpt-6.1-sol-extra-long', status='RUNNING')
+        canvas = Canvas()
+        display = ns['EmbeddedDisplay'](canvas)
+        display.render_live(p, p['ts'])
+        left = canvas.image.crop((0, 214, 214, 240)).tobytes()
+        right = canvas.image.crop((312, 214, 320, 240)).tobytes()
+        images = set()
+        width = display.text_width(p['model'], 1.25)
+        self.assertGreater(width, 98)
+        # Includes both pauses, movement in each direction, and erasure on change.
+        duration = (width + 24) * 2 // 8 + 2
+        for seconds in range(duration):
+            display.render_live(p, p['ts'] + seconds)
+            if seconds % 5 == 0:
+                reference = Canvas()
+                ns['EmbeddedDisplay'](reference).render(p, p['ts'] + seconds)
+                self.assertEqual(canvas.image.tobytes(), reference.image.tobytes())
+            self.assertEqual(canvas.image.crop((0, 214, 214, 240)).tobytes(), left)
+            self.assertEqual(canvas.image.crop((312, 214, 320, 240)).tobytes(), right)
+            images.add(canvas.image.crop((214, 214, 312, 240)).tobytes())
+        self.assertGreater(len(images), 4)
+        for offset in (0, width - 98):
+            reference = Canvas()
+            reference.draw_rectangle(214, 214, 98, 26, ns['CARD'], fill=True)
+            text = ns['EmbeddedDisplay'](reference)
+            text.text(214 - offset, text.centered_text_y(p['model'], 227, 1.25),
+                      p['model'], scale=1.25, max_width=width, clip=(214, 312))
+            self.assertIn(reference.image.crop((214, 214, 312, 240)).tobytes(), images)
+        display.render_live(dict(p, model='gpt-6-sol'), p['ts'] + duration)
+        reference = Canvas()
+        ns['EmbeddedDisplay'](reference).render(dict(p, model='gpt-6-sol'), p['ts'] + duration)
+        self.assertEqual(canvas.image.tobytes(), reference.image.tobytes())
 
     def test_full_city_names_are_never_clipped_in_either_weather_layout(self):
         from bridge.app import Canvas as OpsCanvas

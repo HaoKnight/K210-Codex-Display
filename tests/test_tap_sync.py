@@ -11,7 +11,7 @@ class TapSyncTests(unittest.TestCase):
         self.touch=ns['TouchInput'](self.module,None)
         p=patch.dict(ns,ticks_ms=lambda:self.now,ticks_diff=lambda a,b:(a-b+4096)%8192-4096)
         p.start();self.addCleanup(p.stop)
-    def poll(self,dt,status,x=239,y=158,circle=(239,158,38),flip=False):
+    def poll(self,dt,status,x=239,y=140,circle=(239,158,38),flip=False):
         self.now=(self.now+dt)%8192;self.module.read.return_value=(status,x,y)
         return self.touch.poll_tap(flip,circle)
     def test_press_syncs_once_until_release(self):
@@ -25,9 +25,15 @@ class TapSyncTests(unittest.TestCase):
             self.poll(200,0)
             self.assertEqual(self.poll(200,1,x=x,y=y),(x,y))
         self.poll(200,0)
-        self.assertEqual(self.poll(200,1,circle=None),(239,158))
+        self.assertEqual(self.poll(200,1,circle=None),(239,140))
     def test_flipped_coordinates(self):
-        self.assertEqual(self.poll(200,1,x=80,y=81,flip=True),'sync')
+        self.assertEqual(self.poll(200,1,x=80,y=99,flip=True),'sync')
+    def test_reset_entry_wins_in_overlapping_lower_part_of_sync_circle(self):
+        for x,y in ((216,156),(239,158),(260,180)):
+            self.poll(200,0)
+            self.assertEqual(self.poll(200,1,x=x,y=y),(x,y))
+            self.poll(200,0)
+            self.assertEqual(self.poll(200,1,x=319-x,y=239-y,flip=True),(x,y))
     def test_host_deduplicates_heartbeat_retries(self):
         link=SerialLink('',115200)
         msg={'boot_id':1,'sync_request':1}

@@ -1,19 +1,39 @@
 """macOS menu-bar owner for K210 Codex Display Hub."""
+import os
+import sys
+
+
+if __name__ == "__main__":
+    if any(flag in sys.argv for flag in ("--bluetooth-serial", "--bluetooth-pair",
+                                        "--bluetooth-select")):
+        # PyInstaller's windowed helpers need their pipe streams restored.
+        if sys.stdin is None:
+            sys.stdin = os.fdopen(0, "r", encoding="utf-8")
+        if sys.stdout is None:
+            sys.stdout = os.fdopen(1, "w", encoding="utf-8", buffering=1)
+    if "--bluetooth-serial" in sys.argv:
+        from bridge.bluetooth_serial import main as run_bluetooth_serial
+        position = sys.argv.index("--bluetooth-serial")
+        sys.exit(run_bluetooth_serial(sys.argv[position + 1]))
+    if "--bluetooth-pair" in sys.argv or "--bluetooth-select" in sys.argv:
+        from bridge.bluetooth_pair import main as pair_bluetooth
+        sys.exit(pair_bluetooth("select" if "--bluetooth-select" in sys.argv else "pair"))
+
+
 from pathlib import Path
 import fcntl
 import json
-import os
 import plistlib
 import queue
 import shutil
-import sys
 import threading
 import traceback
 import urllib.request
 import webbrowser
 
+import objc
 import rumps
-from AppKit import NSColor, NSFont, NSMakeRect, NSTextField, NSView
+from AppKit import NSApplication, NSColor, NSFont, NSMakeRect, NSTextField, NSView
 from PyObjCTools import AppHelper
 
 from bridge.app import create_runtime, ROOT
@@ -118,6 +138,11 @@ class ConnectionStatusItem(rumps.MenuItem):
         self.label.setToolTip_(detail)
 
 
+def reopen_console(delegate, application, has_visible_windows):
+    delegate.console_owner.open_console(None)
+    return False
+
+
 class MenuBarApp(rumps.App):
     def __init__(self):
         icon = resource_path("icons/menuTemplate.png")
@@ -144,6 +169,10 @@ class MenuBarApp(rumps.App):
             self.runtime = HubRuntime(self.menu_bar_visibility_changed)
             self.runtime.start()
             self.url = self.runtime.url
+            self.lock_file.seek(0)
+            self.lock_file.truncate()
+            self.lock_file.write(str(self.runtime.server.server_port))
+            self.lock_file.flush()
             write_diagnostic("startup ok: " + self.url)
         except OSError as exc:
             self.start_error = str(exc)
@@ -165,13 +194,35 @@ class MenuBarApp(rumps.App):
     @staticmethod
     def acquire_instance_lock():
         APP_SUPPORT.mkdir(parents=True, exist_ok=True)
-        lock_file = open(APP_SUPPORT / "app.lock", "w")
+        lock_file = open(APP_SUPPORT / "app.lock", "a+")
         try:
             fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except OSError:
-            webbrowser.open(configured_http_url())
+            lock_file.seek(0)
+            try:
+                port = int(lock_file.read(16))
+                if not 1 <= port <= 65535:
+                    raise ValueError("invalid port")
+                url = "http://127.0.0.1:%d" % port
+            except ValueError:
+                url = configured_http_url()
+            lock_file.close()
+            webbrowser.open(url)
             raise SystemExit(0)
         return lock_file
+
+    @rumps.events.before_start
+    def configure_console_launch(self):
+        delegate = self._nsapp
+        delegate.console_owner = self
+        objc.classAddMethods(type(delegate), [objc.selector(
+            reopen_console, selector=b"applicationShouldHandleReopen:hasVisibleWindows:",
+            signature=b"Z@:@Z")])
+        # Refresh AppKit's cached optional delegate methods after adding the selector.
+        NSApplication.sharedApplication().setDelegate_(None)
+        NSApplication.sharedApplication().setDelegate_(delegate)
+        if "--background" not in sys.argv:
+            self.open_console(None)
 
     def state(self):
         if self.runtime:
@@ -277,7 +328,7 @@ class MenuBarApp(rumps.App):
             sender.state = 0
             return
         LAUNCH_AGENT.parent.mkdir(parents=True, exist_ok=True)
-        data = {"Label": BUNDLE_ID, "ProgramArguments": launch_arguments(),
+        data = {"Label": BUNDLE_ID, "ProgramArguments": launch_arguments() + ["--background"],
                 "RunAtLoad": True, "ProcessType": "Interactive"}
         temporary = LAUNCH_AGENT.with_suffix(".plist.tmp")
         with temporary.open("wb") as output:
@@ -295,19 +346,4 @@ class MenuBarApp(rumps.App):
 
 
 if __name__ == "__main__":
-    if any(flag in sys.argv for flag in ("--bluetooth-serial", "--bluetooth-pair",
-                                        "--bluetooth-select")):
-        # PyInstaller's windowed app clears the Python stream objects even
-        # when a helper is launched with stdin/stdout pipes.
-        if sys.stdin is None:
-            sys.stdin = os.fdopen(0, "r", encoding="utf-8")
-        if sys.stdout is None:
-            sys.stdout = os.fdopen(1, "w", encoding="utf-8", buffering=1)
-    if "--bluetooth-serial" in sys.argv:
-        from bridge.bluetooth_serial import main as run_bluetooth_serial
-        position = sys.argv.index("--bluetooth-serial")
-        sys.exit(run_bluetooth_serial(sys.argv[position + 1]))
-    if "--bluetooth-pair" in sys.argv or "--bluetooth-select" in sys.argv:
-        from bridge.bluetooth_pair import main as pair_bluetooth
-        sys.exit(pair_bluetooth("select" if "--bluetooth-select" in sys.argv else "pair"))
     MenuBarApp().run()

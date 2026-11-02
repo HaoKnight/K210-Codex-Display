@@ -17,7 +17,7 @@ class ClockModeTests(unittest.TestCase):
    ns['save_flip_setting'](True,path)
    ns['save_brightness_setting'](70,True,path)
    self.assertEqual(ns['load_device_settings'](path),dict(
-    flip=True,brightness=70,show_codex=True,bluetooth_enabled=False))
+    flip=True,brightness=70,show_codex=True,bluetooth_enabled=False,reset_seen=''))
    ns['save_device_settings'](True,70,path,show_codex=False)
    self.assertFalse(ns['load_device_settings'](path)['show_codex'])
 
@@ -25,7 +25,7 @@ class ClockModeTests(unittest.TestCase):
   with tempfile.TemporaryDirectory() as tmp:
    p=Path(tmp)/'settings.json';p.write_text('{"v":1,"flip":true,"brightness":100}')
    self.assertEqual(ns['load_device_settings'](str(p)),dict(
-    flip=True,brightness=100,show_codex=True,bluetooth_enabled=False))
+    flip=True,brightness=100,show_codex=True,bluetooth_enabled=False,reset_seen=''))
 
  def test_protocol_reports_saved_mode(self):
   with patch.dict(ns,make_boot_id=lambda:1): r=ns['SerialStateReceiver']()

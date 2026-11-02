@@ -14,9 +14,11 @@ import webbrowser
 from urllib.parse import parse_qs, urlsplit
 
 from bridge.device_support.display import Display
+from bridge.device_support.protocol import valid_reset, valid_reset_key
 from .live_renderer import LiveRenderer
 from .serial_link import SerialLink, list_ports
 from .cities import city_catalog, city_location
+from .reset_feed import ResetFeed, confirmation_key, device_event, INTERVAL as RESET_INTERVAL
 from .sources import (LogObserver, chinese_city_name, geocode_city, locate_city, normalize_limits, read_app_server,
                       weather_fetch, quota_error_message, weather_error_message)
 
@@ -38,6 +40,8 @@ FLIP_HITBOX = (12, 99, 296, 38)
 BLUETOOTH_HITBOX = (12, 141, 296, 38)
 BRIGHTNESS_DOWN_HITBOX = (214, 184, 44, 46)
 BRIGHTNESS_UP_HITBOX = (262, 184, 46, 46)
+RESET_HITBOX = (216, 156, 100, 84)
+PREVIEW_IDLE_SECONDS = 60
 
 
 def point_in_rect(x, y, rect):
@@ -70,12 +74,16 @@ class Bridge:
         self.reconfigure_lock = threading.Lock()
         self.serial_connection_lock = threading.Lock()
         self.program_update_lock = threading.Lock()
+        self.update_active = threading.Event()
         self.sync_lock = threading.Lock()
         self.quota_refresh_lock = threading.Lock()
         self.weather_refresh_lock = threading.Lock()
+        self.reset_refresh_lock = threading.Lock()
         self.quota_wake = threading.Event()
         self.touch_sync_busy = False
         self.weather_wake = threading.Event()
+        self.reset_wake = threading.Event()
+        self.reset_feed = ResetFeed()
         self.observer = LogObserver(config["codex_home"], config["limit_id"])
         self.link = SerialLink(config["serial_port"], config["baudrate"])
         self.renderer = LiveRenderer(CANMV_PREVIEW)
@@ -93,19 +101,26 @@ class Bridge:
         self.preview_key = None
         self.preview_frame = []
         self.preview_version = None
+        self.preview_read_at = 0
+        self.reset_preview = {"mode": "live", "event": None}
         self.last_sync = None
         self.threads = []
         self.tick(send=False, poll=False)
 
     def background(self, fn):
-        t = threading.Thread(target=fn, daemon=True)
-        self.threads.append(t)
-        t.start()
+        with self.lock:
+            if self.stop.is_set():
+                return
+            t = threading.Thread(target=fn, daemon=True)
+            self.threads = [worker for worker in self.threads if worker.is_alive()]
+            self.threads.append(t)
+            t.start()
 
     def start(self):
         self.background(self.loop)
         self.background(self.quota_loop)
         self.background(self.weather_loop)
+        self.background(self.reset_loop)
 
     def loop(self):
         next_refresh = 0
@@ -117,12 +132,14 @@ class Bridge:
             if requested and not self.touch_sync_busy:
                 self.touch_sync_busy = True
                 self.background(self.sync_from_touch)
-            self.apply_device_settings()
+            if not self.update_active.is_set():
+                self.apply_device_settings()
             now = time.monotonic()
             if changed or now >= next_refresh:
                 # Polling local data/refreshing the preview does not imply a write.
                 self.tick()
-                self.apply_device_settings()
+                if not self.update_active.is_set():
+                    self.apply_device_settings()
                 next_refresh = now + 0.5
             self.stop.wait(0.1)
 
@@ -147,7 +164,11 @@ class Bridge:
             self.quota_wake.clear()
 
     def refresh_quota(self, config=None):
+        if self.update_active.is_set():
+            return None
         with self.quota_refresh_lock:
+            if self.update_active.is_set():
+                return None
             return self._refresh_quota(config)
 
     def _refresh_quota(self, config=None):
@@ -178,6 +199,25 @@ class Bridge:
                 self.remote_error = None
         return None
 
+    def reset_loop(self):
+        while not self.stop.is_set():
+            self.refresh_reset()
+            self.reset_wake.wait(RESET_INTERVAL)
+            self.reset_wake.clear()
+
+    def refresh_reset(self, config=None, force=False):
+        if self.update_active.is_set():
+            return None
+        with self.reset_refresh_lock:
+            if self.update_active.is_set():
+                return None
+            with self.lock:
+                c = self.config if config is None else config
+                active = c.get("reset_news_enabled", True) and c["source"] != "demo"
+            if active:
+                return self.reset_feed.refresh(force=force)
+        return None
+
     def weather_loop(self):
         while not self.stop.is_set():
             with self.lock:
@@ -192,7 +232,11 @@ class Bridge:
             self.weather_wake.clear()
 
     def refresh_weather(self, config=None):
+        if self.update_active.is_set():
+            return None
         with self.weather_refresh_lock:
+            if self.update_active.is_set():
+                return None
             return self._refresh_weather(config)
 
     def _refresh_weather(self, config=None):
@@ -242,6 +286,8 @@ class Bridge:
 
     def sync_now(self):
         """Force one full refresh: logs, quota, weather, device time, then redraw."""
+        if self.update_active.is_set():
+            raise RuntimeError("正在更新 K210，其他通讯已暂停")
         if not self.sync_lock.acquire(blocking=False):
             raise RuntimeError("正在同步，请等待本次同步完成")
         try:
@@ -252,6 +298,7 @@ class Bridge:
                 results = {}
                 quota_error = None if demo else self.refresh_quota(c)
                 weather_error = None if demo else self.refresh_weather(c)
+                reset_error = None if demo else self.refresh_reset(c, force=True)
                 results["quota"] = {"status": "skipped" if c["source"] not in ("hybrid", "app-server")
                                     else "failed" if quota_error else "ok",
                                     "message": quota_error or ("演示数据" if demo else
@@ -260,6 +307,10 @@ class Bridge:
                                       else "failed" if weather_error else "ok",
                                       "message": weather_error or ("未启用实时天气" if demo
                                                                   else "天气已更新")}
+                results["reset"] = {"status": "skipped" if demo or not c.get("reset_news_enabled", True)
+                                    else "failed" if reset_error else "ok",
+                                    "message": reset_error or ("演示消息" if demo else
+                                        "重置消息已检查" if c.get("reset_news_enabled", True) else "重置消息已关闭")}
                 with self.tick_lock:
                     self.observer.next_scan = 0
                     self.link.request_time_sync()
@@ -294,15 +345,22 @@ class Bridge:
         """Persist settings reported by the K210 touch UI."""
         with self.tick_lock:
             device_flip = self.link.take_device_flip()
-        if device_flip is None:
+            reset = self.snapshot.get("packet", {}).get("reset") or {}
+            seen = self.link.device_reset_seen
+            if not (seen and seen == reset.get("key") and reset.get("status") == "confirmed"):
+                seen = None
+        if device_flip is None and seen is None:
             return False
         with self.reconfigure_lock:
             with self.lock:
-                if bool(self.config.get("flip", False)) == device_flip:
+                new = copy.deepcopy(self.config)
+                if device_flip is not None:
+                    new["flip"] = device_flip
+                if seen is not None:
+                    new["reset_seen"] = seen
+                if new == self.config:
                     self.device_settings_error = None
                     return False
-                new = copy.deepcopy(self.config)
-                new["flip"] = device_flip
             try:
                 temporary = self.config_path.with_suffix(self.config_path.suffix + ".tmp")
                 temporary.write_text(json.dumps(new, ensure_ascii=False, indent=2) + "\n")
@@ -314,7 +372,7 @@ class Bridge:
             with self.lock:
                 self.config = new
                 self.device_settings_error = None
-                if self.snapshot.get("packet"):
+                if device_flip is not None and self.snapshot.get("packet"):
                     self.snapshot["packet"]["flip"] = device_flip
             return True
 
@@ -325,12 +383,16 @@ class Bridge:
     def _tick(self, send=True, poll=True):
         c = self.config
         demo = c["source"] == "demo"
-        if not demo and poll:
+        if not demo and poll and not self.update_active.is_set():
             try:
                 self.observer.poll()
             except Exception as exc:
                 self.observer.error = type(exc).__name__ + ": 日志读取失败"
         now = time.time()
+        reset = self.reset_feed.snapshot(now)
+        reset["enabled"] = c.get("reset_news_enabled", True)
+        if not reset["enabled"]:
+            reset.update(event=None, error=None)
         with self.lock:
             remote, remote_at = self.remote_quota, self.remote_at
             weather = dict(self.weather)
@@ -345,6 +407,16 @@ class Bridge:
             at, origin = now, "demo"
             activity = {"status": "RUNNING", "model": "demo-model"}
             weather = {"temp": 26, "condition": "多云", "at": now}
+            if reset["enabled"]:
+                reset.update(checked_at=int(now // RESET_INTERVAL) * RESET_INTERVAL, stale=False, error=None, event={
+                    "id": "demo-reset", "type": "reset_credit", "status": "announced",
+                    "precision": "window", "from": self.demo_started_at + 3600,
+                    "through": self.demo_started_at + 7200, "confirmed_at": None,
+                    "expires_at": self.demo_started_at + 7200,
+                    "text": "演示预告，仅用于查看界面，不代表真实发放。",
+                    "source_url": None, "original_url": None})
+                if now > reset["event"]["expires_at"]:
+                    reset["event"] = None
         self.seq += 1
         device_ui = self.link.ui_state()
         weather_city = chinese_city_name(weather.get("city", c["weather"]["city"])) or "未知城市"
@@ -360,6 +432,10 @@ class Bridge:
                   "brightness": device_ui["brightness"],
                   "stale": not at or now - at > c["quota_stale_seconds"],
                   "weather_stale": now - weather["at"] > 3600, "demo": demo}
+        packet["reset"] = device_event(reset)
+        if packet["reset"] and packet["reset"]["key"]:
+            packet["reset"]["seen"] = packet["reset"]["key"] in (
+                c.get("reset_seen"), self.link.device_reset_seen)
         packet.update(q or {"q5": None, "q7": None, "r5": None, "r7": None})
         # Send the actual completed upload time back to that same device boot.
         with self.lock:
@@ -375,11 +451,16 @@ class Bridge:
         link_info = self.link.info()
         self._confirm_program_update(link_info)
         with self.lock:
+            if self.preview_frame and time.monotonic() - self.preview_read_at >= PREVIEW_IDLE_SECONDS:
+                self.preview_frame = []
+                self.preview_key = None
+                self.preview_version = None
             self.snapshot = {"packet": packet, "serial": link_info,
                 "weather_city": weather_city,
                 "activity": activity,
                 "quota_source": origin, "quota_updated_at": at or None,
                 "weather_updated_at": weather["at"] or None,
+                "reset_news": reset,
                 "device_page": link_info.get("device_page", "dashboard"),
                 "errors": [e for e in (self.observer.error if not demo else None,
                     self.remote_error, self.weather_error, self.link.error,
@@ -391,6 +472,13 @@ class Bridge:
         packet, link_info = self.snapshot["packet"], self.snapshot["serial"]
         online = link_info["connected"]
         device_page = link_info.get("device_page", "dashboard")
+        if self.reset_preview["mode"] != "live":
+            event = self.reset_preview["event"]
+            # Simulation stays fresh and visible until preview is switched off.
+            if event:
+                event = dict(event, checked_at=packet["ts"], expires_at=packet["ts"] + 172800)
+            packet = dict(packet, reset=event, show_codex=True)
+            device_page = self.reset_preview["page"]
         device_flip = link_info.get("device_flip")
         device_brightness = link_info.get("device_brightness", 100)
         render_flip = device_flip if isinstance(device_flip, bool) else packet["flip"]
@@ -407,7 +495,9 @@ class Bridge:
         if display_type is not None:
             try:
                 device_display = display_type(canvas)
-                if device_page == "info" and hasattr(device_display, "render_info"):
+                if device_page == "reset" and hasattr(device_display, "render_reset"):
+                    device_display.render_reset(packet, online=online)
+                elif device_page == "info" and hasattr(device_display, "render_info"):
                     device_display.render_info(link_info.get("device_info", {}),
                                                packet["offset"], online=online)
                 elif device_page == "settings" and hasattr(device_display, "render_settings"):
@@ -432,7 +522,9 @@ class Bridge:
 
     def read(self, frame_version=None, include_frame=True):
         with self.lock:
+            include_frame = include_frame and not self.update_active.is_set()
             if include_frame:
+                self.preview_read_at = time.monotonic()
                 self._render_preview()
             state = copy.deepcopy(self.snapshot)
             state["frame_version"] = self.preview_version
@@ -443,14 +535,59 @@ class Bridge:
             state["program_update"] = copy.deepcopy(self.program_update)
             state["sync"] = copy.deepcopy(self.last_sync)
             state["show_menu_bar_icon"] = self.config.get("show_menu_bar_icon", True)
+            state["reset_preview"] = copy.deepcopy(self.reset_preview)
             return state
+
+    def set_reset_preview(self, update):
+        if not isinstance(update, dict):
+            raise ValueError("预览设置格式无效")
+        mode = update.get("mode")
+        fields = {"live": {"mode"}, "empty": {"mode"},
+                  "announced": {"mode", "type", "precision", "from", "through"},
+                  "confirmed": {"mode", "type", "confirmed_at"}}
+        optional = {"page"} if mode != "live" else set()
+        if (not isinstance(mode, str) or mode not in fields
+                or set(update) - optional != fields[mode]):
+            raise ValueError("预览状态或设置项无效")
+        if "page" in update and update["page"] not in ("dashboard", "reset"):
+            raise ValueError("预览页面无效")
+        event = None
+        if mode in ("announced", "confirmed"):
+            now = int(time.time())
+            event = {"type": update["type"], "status": mode,
+                     "precision": update.get("precision"),
+                     "from": update.get("from"), "through": update.get("through"),
+                     "confirmed_at": update.get("confirmed_at"),
+                     "checked_at": now, "expires_at": now + 172800, "stale": False}
+            if (not valid_reset(event) or mode == "confirmed" and event["confirmed_at"] is None):
+                raise ValueError("消息类型、时间精度或时间范围无效")
+        with self.lock:
+            page = update.get("page", self.reset_preview.get("page", "dashboard"))
+            if event:
+                event["key"] = confirmation_key(event)
+                previous = self.reset_preview.get("event") or {}
+                event["seen"] = bool(event["key"] and (
+                    page == "reset" or previous.get("key") == event["key"] and previous.get("seen")))
+            self.reset_preview = {"mode": mode, "event": event}
+            if mode != "live":
+                self.reset_preview["page"] = page
+        return self.read()
 
     def _set_program_update(self, status, progress, message, **details):
         update = {"status": status, "progress": max(0, min(100, int(progress))),
                   "message": message, "updated_at": time.time()}
         update.update(details)
         with self.lock:
+            was_active = self.update_active.is_set()
             self.program_update = update
+            if status in ("preparing", "uploading", "restarting"):
+                self.update_active.set()
+            else:
+                self.update_active.clear()
+        if was_active and not self.update_active.is_set():
+            self.quota_wake.set()
+            self.weather_wake.set()
+            self.reset_wake.set()
 
     def _confirm_program_update(self, link_info):
         """Mark an update successful only after a post-reset device reply."""
@@ -541,23 +678,27 @@ class Bridge:
                                      "正在上传 main.py… %d%%" % percent)
 
         try:
-            with self.tick_lock:
+            # Drain in-flight work before giving the upload exclusive use of the link.
+            with (self.serial_connection_lock, self.sync_lock, self.reconfigure_lock,
+                  self.quota_refresh_lock, self.weather_refresh_lock,
+                  self.reset_refresh_lock, self.tick_lock):
                 if not self.link.info()["connected"]:
                     raise ConnectionError("请先连接 K210，并等待设备确认")
                 previous_boot_id = self.link.device_boot_id
+                report(0, 1)
                 result = self.link.update_program(source, target=target,
                                                   progress=report)
-            self._set_program_update(
-                "restarting", 100,
-                "文件已写入，等待 K210 重启后确认",
-                target=result["target"], size=result["size"],
-                sha256=result["sha256"], backup=result["backup"],
-                source=source_label,
-                online_update_preserved=online_update_preserved,
-                previous_boot_id=previous_boot_id,
-                confirm_deadline=time.monotonic() + 45,
-                confirm_after=(time.time()
-                               + result.get("restart_ms", 1200) / 1000.0))
+                self._set_program_update(
+                    "restarting", 100,
+                    "文件已写入，等待 K210 重启后确认",
+                    target=result["target"], size=result["size"],
+                    sha256=result["sha256"], backup=result["backup"],
+                    source=source_label,
+                    online_update_preserved=online_update_preserved,
+                    previous_boot_id=previous_boot_id,
+                    confirm_deadline=time.monotonic() + 45,
+                    confirm_after=(time.time()
+                                   + result.get("restart_ms", 1200) / 1000.0))
             result["source"] = source_label
             result["online_update_preserved"] = online_update_preserved
             return result
@@ -575,6 +716,20 @@ class Bridge:
         if not 0 <= x < 320 or not 0 <= y < 240:
             raise ValueError("触摸坐标超出屏幕")
 
+        with self.lock:
+            previewing = self.reset_preview["mode"] != "live"
+            if previewing:
+                page = self.reset_preview["page"]
+                if page == "reset" and point_in_rect(x, y, BACK_HITBOX):
+                    self.reset_preview["page"] = "dashboard"
+                elif page == "dashboard" and point_in_rect(x, y, RESET_HITBOX):
+                    self.reset_preview["page"] = "reset"
+                    event = self.reset_preview["event"]
+                    if event and event["status"] == "confirmed":
+                        event["seen"] = True
+        if previewing:
+            return self.read()
+
         flip_requested = False
         with self.tick_lock:
             ui = self.link.ui_state()
@@ -586,6 +741,13 @@ class Bridge:
                 self.link.set_device_ui(page="info")
             elif page == "info" and point_in_rect(x, y, BACK_HITBOX):
                 self.link.set_device_ui(page="settings")
+            elif page == "reset" and point_in_rect(x, y, BACK_HITBOX):
+                self.link.set_device_ui(page="dashboard")
+            elif page == "dashboard" and ui["show_codex"] and point_in_rect(x, y, RESET_HITBOX):
+                reset = self.snapshot["packet"].get("reset")
+                if reset and reset["status"] == "confirmed" and reset.get("key"):
+                    self.link.device_reset_seen = reset["key"]
+                self.link.set_device_ui(page="reset")
             elif page == "settings" and point_in_rect(x, y, BACK_HITBOX):
                 self.link.set_device_ui(page="dashboard")
             elif page == "settings" and point_in_rect(x, y, CODEX_HITBOX):
@@ -612,6 +774,7 @@ class Bridge:
                 "baudrate": c["baudrate"], "utc_offset_minutes": c["utc_offset_minutes"],
                 "flip": bool(c.get("flip", False)),
                 "show_menu_bar_icon": c.get("show_menu_bar_icon", True),
+                "reset_news_enabled": c.get("reset_news_enabled", True),
                 "weather": {"enabled": c["weather"]["enabled"],
                             "city": chinese_city_name(c["weather"]["city"]) or "未知城市",
                             "auto_location": c["weather"]["auto_location"]}}
@@ -620,7 +783,7 @@ class Bridge:
         if not isinstance(update, dict):
             raise ValueError("配置格式无效")
         allowed = {"source", "serial_port", "baudrate", "utc_offset_minutes", "flip",
-                   "weather", "show_menu_bar_icon"}
+                   "weather", "show_menu_bar_icon", "reset_news_enabled"}
         if set(update) - allowed:
             raise ValueError("包含不支持的配置项")
         with self.reconfigure_lock:
@@ -628,7 +791,7 @@ class Bridge:
                 new = copy.deepcopy(self.config)
             previous_icon_visibility = new.get("show_menu_bar_icon", True)
             for key in ("source", "serial_port", "baudrate", "utc_offset_minutes", "flip",
-                        "show_menu_bar_icon"):
+                        "show_menu_bar_icon", "reset_news_enabled"):
                 if key in update:
                     new[key] = update[key]
             if "weather" in update:
@@ -658,6 +821,11 @@ class Bridge:
                 # Native UI preferences must not wait for an in-flight serial exchange.
                 with self.lock:
                     self.config["show_menu_bar_icon"] = new["show_menu_bar_icon"]
+            elif set(update) == {"reset_news_enabled"}:
+                with self.lock:
+                    self.config["reset_news_enabled"] = new["reset_news_enabled"]
+                self.reset_wake.set()
+                self.tick(send=True, poll=False)
             else:
                 self.reconfigure(new)
             icon_visibility_changed = (previous_icon_visibility !=
@@ -691,6 +859,7 @@ class Bridge:
                     self.weather_error = None
         self.quota_wake.set()
         self.weather_wake.set()
+        self.reset_wake.set()
         # A flip is a panel-level change: push it to the device right away.
         self.tick(send=flip_changed, poll=False)
 
@@ -698,12 +867,17 @@ class Bridge:
         self.stop.set()
         self.quota_wake.set()
         self.weather_wake.set()
-        for t in self.threads:
+        self.reset_wake.set()
+        with self.lock:
+            threads = list(self.threads)
+        for t in threads:
             t.join(timeout=25)
         self.link.close()
 
     def reconnect_serial(self):
         """Close and reopen the configured serial link on the next exchange."""
+        if self.update_active.is_set():
+            raise RuntimeError("正在更新 K210，其他通讯已暂停")
         with self.tick_lock:
             with self.lock:
                 c = copy.deepcopy(self.config)
@@ -765,6 +939,10 @@ def handler_for(bridge):
                 preview = query.get("preview", ["1"])[0] != "0"
                 body = json.dumps(bridge.read(frame_version=version, include_frame=preview), ensure_ascii=False).encode()
                 mime = "application/json; charset=utf-8"
+            elif path == "/api/program-state":
+                with bridge.lock:
+                    body = json.dumps({"program_update": bridge.program_update}, ensure_ascii=False).encode()
+                mime = "application/json; charset=utf-8"
             elif path == "/api/config":
                 body = json.dumps(bridge.config_view(), ensure_ascii=False).encode()
                 mime = "application/json; charset=utf-8"
@@ -772,7 +950,7 @@ def handler_for(bridge):
                 body = json.dumps(city_catalog(), ensure_ascii=False).encode()
                 mime = "application/json; charset=utf-8"
             elif path == "/api/ports":
-                body = json.dumps(list_ports(), ensure_ascii=False).encode()
+                body = json.dumps([] if bridge.update_active.is_set() else list_ports(), ensure_ascii=False).encode()
                 mime = "application/json; charset=utf-8"
             elif path == "/api/program-info":
                 try:
@@ -797,6 +975,10 @@ def handler_for(bridge):
             if not self.allowed_host():
                 return
             path = self.path.split("?", 1)[0]
+            if bridge.update_active.is_set():
+                self.send_body(409, json.dumps({"ok": False, "error": "正在更新 K210，其他通讯已暂停"},
+                                               ensure_ascii=False).encode())
+                return
             if path == "/api/location-refresh":
                 try:
                     state = bridge.refresh_location()
@@ -851,6 +1033,21 @@ def handler_for(bridge):
                                                    ensure_ascii=False).encode())
                 except (OSError, RuntimeError) as exc:
                     self.send_body(500, json.dumps({"ok": False, "error": str(exc)},
+                                                   ensure_ascii=False).encode())
+                return
+            if path == "/api/reset-preview":
+                if self.headers.get_content_type() != "application/json":
+                    self.send_error(415)
+                    return
+                try:
+                    length = int(self.headers.get("Content-Length", "0"))
+                    if not 0 < length <= 1024:
+                        raise ValueError("预览设置大小无效")
+                    state = bridge.set_reset_preview(json.loads(self.rfile.read(length)))
+                    self.send_body(200, json.dumps({"ok": True, "state": state},
+                                                   ensure_ascii=False).encode())
+                except (ValueError, TypeError) as exc:
+                    self.send_body(400, json.dumps({"ok": False, "error": str(exc)},
                                                    ensure_ascii=False).encode())
                 return
             if path == "/api/device-touch":
@@ -962,6 +1159,10 @@ def validate(c):
         raise ValueError("Invalid flip")
     if not isinstance(c.get("show_menu_bar_icon", True), bool):
         raise ValueError("Invalid show_menu_bar_icon")
+    if not isinstance(c.get("reset_news_enabled", True), bool):
+        raise ValueError("Invalid reset_news_enabled")
+    if not valid_reset_key(c.get("reset_seen", "")):
+        raise ValueError("Invalid reset_seen")
     w = c["weather"]
     if not isinstance(w.get("auto_location", False), bool):
         raise ValueError("Invalid auto_location")

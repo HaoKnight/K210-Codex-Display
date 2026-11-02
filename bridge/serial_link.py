@@ -5,7 +5,7 @@ import re
 import subprocess
 import sys
 import time
-from bridge.device_support.protocol import LineBuffer
+from bridge.device_support.protocol import LineBuffer, valid_reset_key
 
 
 UPDATE_CHUNK_BYTES = 768
@@ -28,6 +28,7 @@ class SerialLink:
         self.device_flip_at = None
         self.device_page = "dashboard"
         self.device_page_at = None
+        self.device_reset_seen = ""
         self.device_show_codex = True
         self.device_bluetooth_enabled = False
         self.device_brightness = 100
@@ -84,7 +85,7 @@ class SerialLink:
                 raise ValueError("invalid show_codex")
             self.device_show_codex = show_codex
         if page is not None:
-            if page not in ("dashboard", "settings", "info"):
+            if page not in ("dashboard", "settings", "info", "reset"):
                 raise ValueError("invalid device page")
             self.device_page = page
             self.device_page_at = time.time()
@@ -101,8 +102,12 @@ class SerialLink:
 
     def _accept_device_ui(self, message):
         changed = False
+        seen = message.get("reset_seen")
+        if seen and valid_reset_key(seen) and seen != self.device_reset_seen:
+            self.device_reset_seen = seen
+            changed = True
         if isinstance(message.get("show_codex"), bool):
-            changed = self.device_show_codex != message["show_codex"]
+            changed = changed or self.device_show_codex != message["show_codex"]
             self.device_show_codex = message["show_codex"]
         if isinstance(message.get("bluetooth_enabled"), bool):
             changed = changed or self.device_bluetooth_enabled != message["bluetooth_enabled"]
@@ -111,7 +116,7 @@ class SerialLink:
             self.device_flip = message["flip"]
             self.device_flip_at = time.time()
             changed = True
-        if message.get("page") in ("dashboard", "settings", "info"):
+        if message.get("page") in ("dashboard", "settings", "info", "reset"):
             changed = changed or self.device_page != message["page"]
             self.device_page = message["page"]
             self.device_page_at = time.time()
@@ -413,6 +418,7 @@ class SerialLink:
                 "device_flip_at": self.device_flip_at,
                 "device_page": self.device_page,
                 "device_page_at": self.device_page_at,
+                "device_reset_seen": self.device_reset_seen,
                 "device_brightness": self.device_brightness,
                 "device_show_codex": self.device_show_codex,
                 "device_bluetooth_enabled": self.device_bluetooth_enabled,
@@ -464,7 +470,8 @@ def _connected_bluetooth_ports():
             capture_output=True, text=True, timeout=3, check=True)
         import objc
         objc.loadBundle("IOBluetooth", globals(),
-                        bundle_path="/System/Library/Frameworks/IOBluetooth.framework")
+                        bundle_path="/System/Library/Frameworks/IOBluetooth.framework",
+                        scan_classes=False)
         device_class = objc.lookUpClass("IOBluetoothDevice")
         addresses = _bluetooth_serial_addresses_from_ioreg(result.stdout)
         return {port for port, address in addresses.items()

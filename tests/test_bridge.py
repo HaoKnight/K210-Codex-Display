@@ -1,14 +1,18 @@
 """Regression checks use temporary configuration and fake serial; no device writes."""
 import json
+import hashlib
 from pathlib import Path
 import sys
+import shutil
+import subprocess
 import tempfile
 import threading
 import time
 import unittest
 from unittest.mock import Mock, patch
 from http.server import ThreadingHTTPServer
-from urllib.request import urlopen
+from urllib.error import HTTPError
+from urllib.request import Request, urlopen
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from bridge.app import Bridge, Canvas, handler_for, load_config
@@ -31,6 +35,126 @@ class BridgeTests(unittest.TestCase):
         self.bridge._set_program_update('restarting', 100, 'waiting',
             confirm_after=time.time()-1, confirm_deadline=time.monotonic()+45,
             previous_boot_id=42)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node.js for browser state checks')
+    def test_update_browser_status_and_lightweight_polling(self):
+        subprocess.run([shutil.which('node'), str(Path(__file__).with_name('test_update_ui.js'))],
+                       check=True, capture_output=True, text=True)
+
+    def test_update_pauses_sources_preview_and_manual_communication_then_resumes(self):
+        self.bridge.config['source'] = 'hybrid'
+        self.bridge._set_program_update('uploading', 45, 'uploading')
+        with patch.object(self.bridge, '_refresh_quota') as quota, \
+             patch.object(self.bridge, '_refresh_weather') as weather, \
+             patch.object(self.bridge.reset_feed, 'refresh') as news, \
+             patch.object(self.bridge.observer, 'poll') as logs, \
+             patch.object(self.bridge, '_render_preview') as render:
+            self.bridge.refresh_quota(); self.bridge.refresh_weather(); self.bridge.refresh_reset(force=True)
+            self.bridge.tick(send=False)
+            self.assertNotIn('frame', self.bridge.read())
+            for call in (self.bridge.sync_now, self.bridge.reconnect_serial):
+                with self.assertRaisesRegex(RuntimeError, '通讯已暂停'):
+                    call()
+            for worker in (quota, weather, news, logs, render):
+                worker.assert_not_called()
+            self.bridge._set_program_update('failed', 45, 'stopped')
+            self.assertFalse(self.bridge.update_active.is_set())
+            self.assertTrue(all(wake.is_set() for wake in (
+                self.bridge.quota_wake, self.bridge.weather_wake, self.bridge.reset_wake)))
+            self.bridge.refresh_quota(); self.bridge.refresh_weather(); self.bridge.refresh_reset(force=True)
+            for worker in (quota, weather, news):
+                worker.assert_called_once()
+
+    def test_upload_waits_for_inflight_work_and_holds_exclusive_channel_until_restart(self):
+        entered, release, uploaded = threading.Event(), threading.Event(), threading.Event()
+        failures = []
+        source = b'from program_update import ProgramUpdater\n'
+        def existing_request():
+            with self.bridge.quota_refresh_lock:
+                entered.set()
+                release.wait(timeout=5)
+        def upload(data, **kwargs):
+            self.assertEqual(data, source)
+            self.assertTrue(self.bridge.tick_lock.locked())
+            self.assertTrue(self.bridge.weather_refresh_lock.locked())
+            self.assertTrue(self.bridge.reset_refresh_lock.locked())
+            uploaded.set()
+            kwargs['progress'](1, 1)
+            return dict(target='/sd/main.py', size=len(data), sha256=hashlib.sha256(data).hexdigest(),
+                        backup=True, restart_ms=0)
+        def run_update():
+            try:
+                self.bridge.update_device_program(source_bytes=source, source_name='main.py')
+            except Exception as exc:
+                failures.append(exc)
+        inflight = threading.Thread(target=existing_request)
+        updater = threading.Thread(target=run_update)
+        with patch.object(self.bridge.link, 'info', return_value={'connected': True}), \
+             patch.object(self.bridge.link, 'update_program', side_effect=upload):
+            self.bridge.link.device_boot_id = 42
+            inflight.start(); self.assertTrue(entered.wait(timeout=1)); updater.start()
+            try:
+                self.assertTrue(self.bridge.update_active.wait(timeout=1))
+                self.assertFalse(uploaded.is_set())
+            finally:
+                release.set(); inflight.join(timeout=2); updater.join(timeout=2)
+        self.assertFalse(updater.is_alive())
+        self.assertEqual(failures, [])
+        self.assertTrue(uploaded.is_set())
+        self.assertTrue(self.bridge.update_active.is_set())
+        self.assertEqual(self.bridge.program_update['status'], 'restarting')
+        self.assertTrue(self.bridge._confirm_program_update(dict(connected=True, ack_at=time.time()+1, device_boot_id=43)))
+        self.assertFalse(self.bridge.update_active.is_set())
+
+    def test_failed_upload_releases_all_communication_locks(self):
+        with patch.object(self.bridge.link, 'info', return_value={'connected': True}), \
+             patch.object(self.bridge.link, 'update_program', side_effect=OSError('upload failed')):
+            with self.assertRaises(OSError):
+                self.bridge.update_device_program(source_bytes=b'print(1)\n', source_name='main.py')
+        self.assertEqual(self.bridge.program_update['status'], 'failed')
+        self.assertFalse(self.bridge.update_active.is_set())
+        for lock in (self.bridge.sync_lock, self.bridge.tick_lock, self.bridge.quota_refresh_lock,
+                     self.bridge.weather_refresh_lock, self.bridge.reset_refresh_lock):
+            self.assertFalse(lock.locked())
+
+    def test_waiting_for_requests_does_not_block_connection_keepalive(self):
+        self.bridge._set_program_update('preparing', 0, 'waiting for requests')
+        ticked = threading.Event()
+        worker = threading.Thread(target=self.bridge.loop)
+        with self.bridge.reconfigure_lock, \
+             patch.object(self.bridge, 'apply_device_settings', side_effect=AssertionError('settings during update')), \
+             patch.object(self.bridge.link, 'poll', return_value=False), \
+             patch.object(self.bridge, 'tick', side_effect=lambda: ticked.set()):
+            worker.start()
+            try:
+                self.assertTrue(ticked.wait(timeout=1))
+            finally:
+                self.bridge.stop.set(); worker.join(timeout=2)
+        self.assertFalse(worker.is_alive())
+
+    def test_update_http_only_returns_progress_and_rejects_other_device_actions(self):
+        self.bridge._set_program_update('uploading', 37, 'uploading')
+        server = ThreadingHTTPServer(('127.0.0.1', 0), handler_for(self.bridge))
+        worker = threading.Thread(target=server.serve_forever, daemon=True); worker.start()
+        try:
+            base = 'http://127.0.0.1:%d' % server.server_port
+            with patch('bridge.app.list_ports', side_effect=AssertionError('scan during upload')), \
+                 patch.object(self.bridge, '_render_preview', side_effect=AssertionError('render during upload')):
+                with urlopen(base+'/api/program-state') as response:
+                    data = response.read()
+                self.assertEqual(json.loads(data)['program_update']['progress'], 37)
+                self.assertLess(len(data), 1024)
+                with urlopen(base+'/api/state') as response:
+                    self.assertNotIn('frame', json.load(response))
+                with urlopen(base+'/api/ports') as response:
+                    self.assertEqual(json.load(response), [])
+                for path in ('/api/sync', '/api/device-touch', '/api/bluetooth/connect'):
+                    with self.assertRaises(HTTPError) as caught:
+                        urlopen(Request(base+path, data=b'{}', headers={'Content-Type':'application/json'}))
+                    self.assertEqual(caught.exception.code, 409)
+                    caught.exception.close()
+        finally:
+            server.shutdown(); server.server_close(); worker.join(timeout=2)
 
     def test_unchanged_city_saves_offline(self):
         with patch('bridge.app.geocode_city', side_effect=OSError('offline')) as geo:
@@ -174,6 +298,48 @@ class BridgeTests(unittest.TestCase):
         self.bridge.tick(send=False, poll=False)
         self.assertIn('frame', self.bridge.read(frame_version=before))
 
+    def test_idle_preview_is_released_and_rebuilt_without_stopping_device_updates(self):
+        with patch('bridge.app.time.monotonic', return_value=100) as clock, \
+             patch('bridge.app.time.time', return_value=1790056800), \
+             patch('bridge.app.Canvas', wraps=Canvas) as canvas:
+            first = self.bridge.read()
+            frame = self.bridge.preview_frame
+            clock.return_value = 130
+            self.bridge.read(frame_version=first['frame_version'])
+            clock.return_value = 180
+            self.bridge.tick(send=False, poll=False)
+            self.bridge.read(include_frame=False)
+            self.assertIs(self.bridge.preview_frame, frame)
+            clock.return_value = 190
+            self.bridge.tick(send=False, poll=False)
+            self.assertEqual(self.bridge.preview_frame, [])
+            self.assertIsNone(self.bridge.preview_key)
+            self.assertIsNone(self.bridge.preview_version)
+            self.assertEqual(self.bridge.read(include_frame=False)['packet']['page'],
+                             first['packet']['page'])
+            self.assertTrue(self.bridge.read()['frame'])
+            self.assertEqual(canvas.call_count, 2)
+
+    def test_background_workers_are_bounded_and_cannot_start_after_close(self):
+        release = threading.Event()
+        self.bridge.background(lambda: release.wait(timeout=5))
+        active = self.bridge.threads[0]
+        try:
+            for _ in range(20):
+                self.bridge.background(lambda: None)
+                worker = self.bridge.threads[-1]
+                worker.join(timeout=1)
+                self.assertFalse(worker.is_alive())
+                self.assertIn(active, self.bridge.threads)
+                self.assertLessEqual(len(self.bridge.threads), 2)
+        finally:
+            release.set()
+            self.bridge.close()
+        self.assertFalse(active.is_alive())
+        work = Mock()
+        self.bridge.background(work)
+        work.assert_not_called()
+
     def test_settings_preview_indicator_uses_serial_connection(self):
         self.bridge.link.set_device_ui(page='settings')
         for connected,color in ((False,(239,68,68)),(True,(22,215,141)),(False,(239,68,68))):
@@ -205,6 +371,7 @@ class BridgeTests(unittest.TestCase):
         self.bridge.config['source'] = 'hybrid'
         with patch.object(self.bridge, 'refresh_quota', return_value='额度模拟失败'), \
              patch.object(self.bridge, 'refresh_weather', return_value=None), \
+             patch.object(self.bridge, 'refresh_reset', return_value=None), \
              patch.object(self.bridge.observer, 'poll'):
             state = self.bridge.sync_now()
         self.assertFalse(state['sync']['ok'])

@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 import socket
 import ssl
@@ -63,6 +64,118 @@ class WeatherErrorTests(unittest.TestCase):
 
 
 class LogObserverTests(unittest.TestCase):
+    @staticmethod
+    def record(kind, at, **payload):
+        return json.dumps({'timestamp': at, 'type': kind, 'payload': payload}) + '\n'
+
+    def test_only_recent_files_are_retained_across_active_and_archived_logs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = []
+            for index in range(70):
+                directory = Path(tmp) / ('sessions' if index % 2 else 'archived_sessions')
+                directory.mkdir(exist_ok=True)
+                path = directory / ('%03d.jsonl' % index)
+                path.write_text(self.record('event_msg', '2026-10-30T08:00:00Z',
+                                            type='task_started'))
+                os.utime(path, (index + 1, index + 1))
+                paths.append(path)
+            observer = LogObserver(tmp)
+            observer.poll()
+            self.assertEqual(observer.paths, list(reversed(paths[-64:])))
+            self.assertEqual(set(observer.files), set(paths[-64:]))
+            paths[0].unlink()
+            paths[-1].unlink()
+            observer.next_scan = 0
+            observer.poll()
+            self.assertEqual(set(observer.files), set(paths[5:-1]))
+
+    def test_large_conversation_records_are_skipped_before_json_decoding(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'sessions' / 'task.jsonl'
+            path.parent.mkdir()
+            path.write_text(self.record('event_msg', '2026-10-30T08:00:00Z',
+                                        type='task_started'))
+            observer = LogObserver(tmp)
+            observer.poll()
+            records = (
+                self.record('response_item', '2026-10-30T08:00:01Z', content='x' * 80000),
+                json.dumps({'type': 'response_item', 'timestamp': '2026-10-30T08:00:02Z',
+                            'payload': {'content': 'y' * 80000}}, separators=(',', ':')) + '\n',
+                self.record('turn_context', '2026-10-30T08:00:03Z', model='gpt-6.1-sol'),
+                json.dumps({'payload': {'type': 'task_complete'}, 'type': 'event_msg',
+                            'timestamp': '2026-10-30T08:00:04Z'}) + '\n',
+            )
+            with path.open('a') as stream:
+                stream.write(''.join(records))
+            with patch('bridge.sources.json.loads', wraps=json.loads) as decode:
+                observer.poll()
+            self.assertFalse(any(b'"response_item"' in call.args[0]
+                                 for call in decode.call_args_list))
+            self.assertEqual(observer.activity[path]['status'], 'DONE')
+            self.assertEqual(observer.activity[path]['model'], 'gpt-6.1-sol')
+
+    def test_long_running_log_recovers_start_and_model_before_tail(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'sessions' / 'task.jsonl'
+            path.parent.mkdir()
+            path.write_text(
+                self.record('session_meta', '2026-10-30T08:00:00Z', source='vscode') +
+                self.record('event_msg', '2026-10-30T08:00:00Z', type='task_started', turn_id='main') +
+                self.record('turn_context', '2026-10-30T08:00:01Z', model='gpt-6.1-sol', turn_id='main') +
+                self.record('response_item', '2026-10-30T08:20:00Z', type='tool_output', content='x' * 1800000) +
+                self.record('event_msg', '2026-10-30T08:30:00Z', type='item_completed', turn_id='main'))
+            review = path.with_name('review.jsonl')
+            # Even a review whose model context has scrolled out of the tail is internal.
+            review.write_text(
+                self.record('session_meta', '2026-10-30T08:29:00Z', source={'subagent': {'other': 'guardian'}}) +
+                self.record('event_msg', '2026-10-30T08:31:00Z', type='task_complete'))
+            observer = LogObserver(tmp)
+            observer.poll()
+            with patch('bridge.sources.time.time', return_value=1793349062):
+                state = observer.current_activity(300)
+            self.assertEqual((state['status'], state['model'], state['running_count']),
+                             ('RUNNING', 'gpt-6.1-sol', 1))
+            self.assertNotIn(review, observer.activity)
+
+    def test_old_turn_completion_cannot_finish_the_new_turn(self):
+        observer = LogObserver('/unused')
+        for kind, at, payload in (
+            ('event_msg', '2026-10-30T08:00:00Z', {'type': 'task_started', 'turn_id': 'new'}),
+            ('turn_context', '2026-10-30T08:00:01Z', {'model': 'gpt-6-sol', 'turn_id': 'new'}),
+            ('event_msg', '2026-10-30T08:00:02Z', {'type': 'task_complete', 'turn_id': 'old'}),
+            ('event_msg', '2026-10-30T08:00:03Z', {'type': 'item_completed', 'turn_id': 'old'}),
+        ):
+            observer.consume(json.loads(self.record(kind, at, **payload)), 'task')
+        self.assertEqual(observer.activity['task']['status'], 'RUNNING')
+        observer.consume(json.loads(self.record('event_msg', '2026-10-30T08:00:04Z',
+                                               type='task_complete', turn_id='new')), 'task')
+        self.assertEqual(observer.activity['task']['status'], 'DONE')
+
+    def test_internal_review_cannot_replace_user_task_or_model(self):
+        observer = LogObserver('/unused')
+        observer.consume(json.loads(self.record('event_msg', '2026-10-30T08:00:00Z',
+                                               type='task_complete')), 'main')
+        observer.consume(json.loads(self.record('turn_context', '2026-10-30T08:00:01Z',
+                                               model='codex-auto-review')), 'review')
+        observer.consume(json.loads(self.record('event_msg', '2026-10-30T08:00:02Z',
+                                               type='task_complete')), 'review')
+        self.assertNotIn('review', observer.activity)
+        self.assertEqual(observer.current_activity(300)['model'], '--')
+
+    def test_new_session_is_discovered_within_five_seconds(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp) / 'sessions'
+            directory.mkdir()
+            observer = LogObserver(tmp)
+            with patch('bridge.sources.time.monotonic', return_value=0):
+                observer.poll()
+            path = directory / 'new.jsonl'
+            path.write_text(self.record('event_msg', '2026-10-30T08:00:00Z',
+                                        type='task_started', turn_id='new'))
+            with patch('bridge.sources.time.monotonic', return_value=5):
+                observer.poll()
+            self.assertEqual(observer.activity[path]['status'], 'RUNNING')
+
     def test_unchanged_files_stay_closed_and_append_truncation_rotation_are_read(self):
         def event(status):
             return json.dumps({'timestamp': '2026-10-08T01:00:00Z',

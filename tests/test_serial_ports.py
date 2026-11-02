@@ -8,6 +8,13 @@ from bridge import bluetooth_devices, serial_link
 
 
 class SerialPortScanTests(unittest.TestCase):
+    @unittest.skipUnless(sys.platform == 'darwin', 'native macOS Bluetooth framework')
+    def test_native_device_class_is_available_without_exporting_unrelated_classes(self):
+        before = set(vars(bluetooth_devices))
+        device_class = bluetooth_devices._device_class()
+        self.assertEqual(device_class.__name__, 'IOBluetoothDevice')
+        self.assertEqual(set(vars(bluetooth_devices)), before)
+
     def test_ioreg_maps_bluetooth_serial_names_to_addresses(self):
         output = '''+-o IOBluetoothDevice  <class IOBluetoothDevice>
   |   "BD_ADDR" = <112233445566>
